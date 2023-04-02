@@ -35,7 +35,7 @@ def desenhar_dado(tabuleiro, centro_x, centro_y, numero):
     dist_multiplier = 2  # Increase the distance between the dots
 
     # Draw the dice
-    tabuleiro.create_rectangle(centro_x - meio_lado, centro_y - meio_lado, centro_x + meio_lado, centro_y + meio_lado, fill="white", outline="black")
+    tabuleiro.create_rectangle(centro_x - meio_lado, centro_y - meio_lado, centro_x + meio_lado, centro_y + meio_lado, fill="white", outline="black", tags="dado")
 
     pontos = {
         1: [(0, 0)],
@@ -51,9 +51,13 @@ def desenhar_dado(tabuleiro, centro_x, centro_y, numero):
         y = centro_y + dy * raio * dist_multiplier
         tabuleiro.create_oval(x - raio, y - raio, x + raio, y + raio, fill="black")
 
-def girar_dado(jogador):
+def girar_dado(jogador, tabuleiro):
     passos = randint(1, 6)
     jogador.posicao += passos
+
+    centro_x, centro_y = LARGURA_TABULEIRO // 2, ALTURA_TABULEIRO // 2
+    tabuleiro.delete("dado")  # Delete the existing dice on the board
+    desenhar_dado(tabuleiro, centro_x, centro_y, passos)  # Draw the new dice with the updated value
 
     return passos
 
@@ -140,7 +144,7 @@ def main():
             desenhar_jogador(tabuleiro, x, y, jogador.cor)
 
     centro_x, centro_y = LARGURA_TABULEIRO // 2, ALTURA_TABULEIRO // 2
-    desenhar_dado(tabuleiro, centro_x, centro_y, 5)
+    desenhar_dado(tabuleiro, centro_x, centro_y, 5) # FIX FUNCTION PARAMS
 
     tabuleiro.create_text(LARGURA_TABULEIRO // 2, ALTURA_TABULEIRO // 2 + LARGURA_CASA + 20, text="Jogo da Vida", font=("Futura", 30, "bold italic"), fill="black")
     
@@ -150,14 +154,15 @@ def main():
     style.layout("Custom.TButton", [('Button.border', {'sticky': 'nswe', 'border': '1', 'children': [('Button.padding', {'sticky': 'nswe', 'border': '1', 'children': [('Button.label', {'sticky': 'nswe'})]})]})])
 
     # Move the "Girar Dados" button below the dice and apply the custom style
-    btn_girar = ttk.Button(root, text="Girar Dados", command=lambda: girar_dado(jogadores[0]), style="Custom.TButton")
+    btn_girar = ttk.Button(root, text="Girar Dados", command=lambda: girar_dado(jogadores[0], tabuleiro), style="Custom.TButton")
     btn_girar.place(x=LARGURA_TABULEIRO // 2 - btn_girar.winfo_reqwidth() // 2, y=ALTURA_TABULEIRO // 2 + LARGURA_CASA + 60)
 
     vez = "Vez: jogador 3"
     tabuleiro.create_text(LARGURA_CASA + 160, LARGURA_CASA + 10, text=vez, anchor="ne", font=("Arial", 16, "bold"), fill="black")
 
-    cash = "$1000"
+    cash = "R$ 1000"
     tabuleiro.create_text(LARGURA_TABULEIRO - LARGURA_CASA - 10, LARGURA_CASA + 10, text=cash, anchor="ne", font=("Arial", 16, "bold"), fill="green")
     root.mainloop()
+
 if __name__ == "__main__":
     main()
