@@ -18,7 +18,7 @@ class Jogador:
         self.salario = salario
         self.dinheiro = 0
 
-class Tabuleiro:
+class GameInterface:
     def __init__(self, master):
         self.frame = tk.Frame(master)
         self.frame.pack()
@@ -185,10 +185,10 @@ class Tabuleiro:
 class JogoDaVida:
     def __init__(self, master):
         self.master = master
-        self.tabuleiro = Tabuleiro(master)
+        self.game_interface = GameInterface(master)
     
-        self.tabuleiro.desenhar_casas()
-        self.tabuleiro.desenhar_jogadores()
+        self.game_interface.desenhar_casas()
+        self.game_interface.desenhar_jogadores()
 
 def main():
     root = tk.Tk()
