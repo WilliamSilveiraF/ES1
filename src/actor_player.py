@@ -12,7 +12,8 @@ LARGURA_TABULEIRO = 800
 ALTURA_TABULEIRO = 800
 LARGURA_CASA = 80
 COMPRIMENTO_LADO = NUM_CASAS // 4
-CORES = ["#f3d997", "#bae6af", "#f88379", "#eeeeee"]
+CORES = ["#edde22", "#50b93e", "#e76da8", "#56c2f0"]
+##CORES = ["#e6bd22", "#148bc6", "#56b04f", "#c01960"]
 
 class Jogador:
     def __init__(self, nome, cor, posicao, salario):
@@ -22,12 +23,65 @@ class Jogador:
         self.salario = salario
         self.dinheiro = 0
 
-class InitPage:
+class ActorPlayer(DogPlayerInterface):
+    def __init__(self, master):
+        self.master = master
+        self.dog_server_interface = DogActor()
+        self.player_name = ''
+        self.init_interface = None
+        self.game_interface = None
+
+        self.render_init_interface()
+
+        self.master.mainloop()
+
+    def start_match(self):
+        start_status = self.dog_server_interface.start_match(3)
+        message = start_status.get_message()
+        
+        return message
+
+    def start_game(self):
+        self.player_name = self.init_interface.name_var.get()  # Store the player name
+
+        if not self.player_name.strip() or self.player_name.strip() == 'Enter your name':  # Check if player_name is empty
+            messagebox.showwarning("Warning", "Player name is required")  # Show warning messagebox
+            return  # Exit the function
+        
+        conn_message = self.dog_server_interface.initialize(self.player_name, self)
+        messagebox.showinfo(message=conn_message)
+
+        if conn_message != 'Conectado a Dog Server':
+            return
+
+        match_message = self.start_match()
+        if match_message == 'Jogadores insuficientes':
+            self.init_interface.set_waiting_other_players()
+            return
+
+        self.render_game_interface()
+        
+    def render_init_interface(self):
+        self.player_name = ''
+        self.init_interface = InitInterface(self.master)
+        self.init_interface.button.configure(command=self.start_game)
+
+    def render_game_interface(self):
+        self.init_interface.frame.destroy()  # Close the initial page
+        self.init_interface = None
+        self.game_interface = GameInterface(self.master)
+
+    def receive_start(self, start_status):
+        message = start_status.get_message()
+        messagebox.showinfo(message=message)
+        self.render_game_interface()
+        
+class InitInterface(ActorPlayer):
     def __init__(self, master):
         self.master = master
 
         # Load and adjust the background image
-        self.image = Image.open("initpage.jpg")  # replace "path_to_your_image.jpg" with your image file path
+        self.image = Image.open("media/initpage.jpg")  # replace "path_to_your_image.jpg" with your image file path
         img_width, img_height = self.image.size
         new_width = LARGURA_TABULEIRO+300
         new_height = int((new_width / img_width) * img_height)  # maintain aspect ratio
@@ -63,7 +117,7 @@ class InitPage:
                   foreground=[('pressed', '#FFFFFF'), ('active', '#FFFFFF')],
                   background=[('pressed', '!disabled', '#4cae4c'), ('active', '#8cbe8c')]
                   )
-        self.button = ttk.Button(self.frame, text="Jogar", command=self.start_game, style="C.TButton", cursor="hand2")
+        self.button = ttk.Button(self.frame, text="Jogar", style="C.TButton", cursor="hand2")
         self.button.pack(side="bottom", pady=20)
         self.button.place(relx=0.5, rely=0.9, anchor="center")
 
@@ -75,25 +129,38 @@ class InitPage:
         if self.name_entry.get() == '':
             self.name_entry.insert(0, 'Enter your name')
 
-    def start_game(self):
-        self.player_name = self.name_var.get()  # Store the player name
-    
-        if not self.player_name.strip():  # Check if player_name is empty
-            messagebox.showwarning("Warning", "Player name is required")  # Show warning messagebox
-            return  # Exit the function
-    
-
-        self.frame.destroy()  # Close the initial page
-        ActorPlayer(self.master, self.player_name)  # Start the main game
+    def set_waiting_other_players(self):
+        style = ttk.Style()
+        style.configure("Blue.TButton",
+                foreground="white",
+                background="#2596be",
+                font=("Arial", 20, "bold"),
+                padding=10)
+        style.map("C.TButton",
+                  foreground=[],
+                  background=[]
+                  )
+        self.name_entry.destroy()
+        self.button.configure(text="Aguardando outros Jogadores", command=None, style="Blue.TButton", cursor='watch')
 
 class GameInterface:
     def __init__(self, master):
-        self.frame = tk.Frame(master)
+        self.master = master
+        self.master.geometry(f"{LARGURA_TABULEIRO+300}x{ALTURA_TABULEIRO}")
+
+        self.frame = tk.Frame(self.master)
         self.frame.pack()
 
         # set the window size for the game interface
-        self.master = master
-        self.master.geometry(f"{LARGURA_TABULEIRO+300}x{ALTURA_TABULEIRO}")
+       
+        self.menubar = Menu(self.master)
+        self.menubar.option_add('*tearOff', FALSE)
+        self.master['menu'] = self.menubar
+        
+        self.menu_file = Menu(self.menubar)
+        self.menubar.add_cascade(menu=self.menu_file, label='File')
+
+        self.menu_file.add_command(label='Restaurar estado inicial', command=self.start_game)
 
         self.canvas = tk.Canvas(self.frame, width=LARGURA_TABULEIRO, height=ALTURA_TABULEIRO, bg='white')
         self.canvas.pack(side="left")
@@ -112,6 +179,9 @@ class GameInterface:
                                 font=("Futura", 30, "bold italic"), fill="black")
 
         self._criar_cards()
+
+        self.desenhar_casas()
+        self.desenhar_jogadores()
 
     def atualizar_posicao_jogador(self, jogador):
         jogador.posicao %= NUM_CASAS  # Atualiza a posição do jogador no tabuleiro
@@ -250,54 +320,18 @@ class GameInterface:
         self.atualizar_posicao_jogador(jogador)
         # self.update_cash(jogador) FIXME
 
+    def start_game(self):
+        print('start_game')
+    
     def update_cash(self, jogador):
         jogador.dinheiro += 100 
         self.canvas.itemconfigure(self._cash_text, text=f"R$ {jogador.dinheiro}")
 
-class ActorPlayer(DogPlayerInterface):
-    def __init__(self, master, player_name):
-        self.master = master
-        self.master.title("Jogo da Vida Simplificado")
-        self.game_interface = GameInterface(self.master)
 
-        self.menubar = Menu(self.master)
-        self.menubar.option_add('*tearOff', FALSE)
-        self.master['menu'] = self.menubar
-        
-        self.menu_file = Menu(self.menubar)
-        self.menubar.add_cascade(menu=self.menu_file, label='File')
-
-        self.menu_file.add_command(label='Iniciar jogo', command=self.start_match)
-        self.menu_file.add_command(label='Restaurar estado inicial', command=self.start_game)
-
-        self.game_interface.desenhar_casas()
-        self.game_interface.desenhar_jogadores()
-
-        self.dog_server_interface = DogActor()
-        message = self.dog_server_interface.initialize(player_name, self)
-        messagebox.showinfo(message=message)
-
-        self.master.mainloop()
-
-    def start_match(self):
-        start_status = self.dog_server_interface.start_match(5)
-        message = start_status.get_message()
-        messagebox.showinfo(message=message)
-
-    def start_game(self):
-        print('start_game')
-
-    def end_game(self):
-        self.frame.destroy()  # Close the game page
-        InitPage(self.master)  # Go back to the initial page
-
-    def receive_start(self, start_status):
-        message = start_status.get_message()
-        messagebox.showinfo(message=message)
 
 def main():
     root = Tk()
-    InitPage(root)
+    ActorPlayer(root)
     root.mainloop()
 
 if __name__ == "__main__":
