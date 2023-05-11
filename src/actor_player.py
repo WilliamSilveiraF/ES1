@@ -5,15 +5,17 @@ from random import randint
 from dog.dog_interface import DogPlayerInterface
 from dog.dog_actor import DogActor
 from PIL import Image, ImageTk
+from components.CustomDialog import CustomDialog
+from enum import Enum
 
 NUM_JOGADORES = 5
-NUM_CASAS = 40
+NUM_CASAS = 36
 LARGURA_TABULEIRO = 800
 ALTURA_TABULEIRO = 800
 LARGURA_CASA = 80
-COMPRIMENTO_LADO = NUM_CASAS // 4
-CORES = ["#edde22", "#50b93e", "#e76da8", "#56c2f0"]
-##CORES = ["#e6bd22", "#148bc6", "#56b04f", "#c01960"]
+COMPRIMENTO_LADO = 10
+CORES = ["#e6bd22", "#148bc6", "#c01960", "#54ad39"]
+LIGHT_CORES = ["#edde22", "#56c2f0", "#e76da8", "#b3d880"]
 
 class Jogador:
     def __init__(self, nome, cor, posicao, salario):
@@ -22,6 +24,49 @@ class Jogador:
         self.posicao = posicao
         self.salario = salario
         self.dinheiro = 0
+
+class Casa(Enum):
+    INIT = (1, 'Init House', 'Init House Description')
+    GRADUATION = (2, 'You graduated', 'Congratulations, you graduated!! With that you must pay tuition of U$$ 20,000 from your college.')
+    BIRTH = (3, 'Birth', 'Congratulations, a new child has joined your family!. Remember, with every joy comes new responsibilities. Each turn you must pay U$$ 500 by child.')
+    LOTTERY = (4, 'Lottery', "You've won the lottery! Collect an immediate U$$ 75,000 bonus to represent your winnings.")
+    MOUNT_EVEREST = (5, 'Mount Everest Expedition', "You've decided to climb Mount Everest! Pay U$$ 5,000 to cover the expedition costs, but earn life points for the achievement.")
+    PROMOTION = (6, 'Promotion', 'Congratulations, your salary increases by 10 percent.')
+    ADOPTION = (7, 'Adoption', 'Your heart and home have expanded with the adoption of a child. Celebrate this moment and remember, every child is a bundle of joy and a responsibility to shape the future. Each turn you must pay U$$ 500 by child.')
+    ROBBERY = (8, 'Robbery', "Unfortunately, you've been robbed. Pay U$$ 10,000 to represent the financial loss.")
+    BACKPACKING = (9, 'Backpacking Trip', "You've decided to go backpacking through Europe! Pay U$$ 15,000 to cover the trip costs.")
+    INTERNSHIP = (10, 'Internship', 'You have landed an internship in your field! This is a great step towards your career. You will gain valuable experience, but you will earn only half your salary this turn as internships are typically low-paying.')
+    CHILD_GRADUATION = (11, "Child's Graduation", 'Your child has hit a significant milestone - university graduation! This proud moment comes with expenses. Make a U$$ 5,000 payment to cover the cost of the graduation ceremony, from the gown to the celebratory dinner.')
+    INVESTMENT = (12, 'Investment', "You've decided to invest some money. You will gain U$$ 12,500.")
+    CORAL_REEF_DIVE = (13, 'Coral Reef Dive', "You've decided to dive in the Coral Reef! Pay U$$ 6,000 to cover the dive costs.")
+    POST_GRADUATION = (14, 'Post-Graduation', 'You have completed your postgraduate studies! This milestone is an important step in your career and deserves a reward. Collect U$$ 10,000 bonus to reflect your increased qualifications.')
+    SCHOOL_CHANGE = (15, 'School Change', "Your child's education journey requires a school change. Whether it's due to a move or just seeking better opportunities, there are costs involved. Pay U$$ 7,000 for the move, new uniforms, and other related expenses.")
+    LIFE_INSURANCE = (16, 'Life Insurance', "You've decided to buy life insurance. Pay U$$ 10,000 to represent the insurance premium.")
+    MARATHON = (17, 'Marathon', "You've decided to run a marathon! Pay U$$ 2,500 to cover the registration and training costs, but earn life points for the achievement.")
+    ENTREPRENEUR = (18, 'Entrepreneur', 'You have taken the bold step of starting your own business! This exciting venture comes with its costs. Pay U$$ 25,000 to cover the startup costs.')
+    FAMILY_TRIP = (19, 'Family Trip', "Quality time alert! You're taking a well-deserved family trip. It's time for relaxation and adventures. Pay U$$ 12,000 for the trip expenses, including travel, accommodation, and daily allowances.")
+    INHERITANCE = (20, 'Inheritance', "You've inherited a large sum of money. Collect U$$ 50,000 bonus to represent the inheritance.")
+    SPACE_TRAVEL = (21, 'Space Travel', "You've decided to go to space! Pay U$$ 30,000 to cover the travel costs.")
+    RETIREMENT = (22, 'Retirement', "You've retired after a long and successful career! It's time to relax and enjoy the fruits of your labor. Now, you will collect U$$ 5,000 bonus each turn.")
+    CHILDREN_WEDDING = (23, "Children's Wedding", "Your child is getting married! A proud and emotional moment for you. However, weddings can be expensive. Pay U$$ 17,500 for the wedding party, from the venue to the food and the decorations.")
+    CAR_INSURANCE = (24, 'Car Insurance', "You've decided to buy car insurance. Pay U$$ 8,000 amount to represent the insurance premium.")
+    AFRICAN_SAFARI = (25, 'African Safari', "You've decided to go on a safari in Africa! Pay U$$ 16,000 amount to cover the trip costs.")
+    CAREER_CHANGE = (26, 'Career Change', 'You have decided to change your career! This brave move opens up new opportunities, your salary increases by 20 percent.')
+    MUSIC_LESSON = (27, 'Music Lesson', 'Your children have shown an interest in music and want to learn an instrument. This could be the start of a lifelong passion or even a career. Pay U$$ 2,500 for the music lessons, including the cost of the instrument and the tutor.')
+    INCOME_TAX = (28, 'Income Tax', "It's income tax time. Pay 30 percent of your total money to represent your taxes.")
+    ANTARCTIC_EXPEDITION = (29, 'Antarctic Expedition', "You've decided to visit Antarctica! Pay U$$ 22,500 to cover the trip costs.")
+    VOLUNTEER_WORK = (30, 'Volunteer Work', 'You have decided to do volunteer work. This noble act might not provide a salary this turn, but it brings a great sense of fulfillment.')
+    SPORTS_COMPETITION = (31, 'Sports Competition', "Your children have entered a sports competition! They're excited and nervous. Pay U$$ 3,000 for the sports equipment, team uniforms, and other related expenses.")
+    CHARITY_HOUSE = (32, 'Charity House', "You've decided to make a generous donation to a charity that's close to your heart. Pay U$$ 10,000 amount to represent your charitable contribution.")
+    MOTORCYCLE_JOURNEY = (33, 'Motorcycle Journey on Route 66', "You've decided to ride Route 66 on a motorcycle! Pay U$$ 8,000 to cover the trip costs.")
+    REMOTE_WORK = (34, 'Remote Work', 'You have landed the opportunity to work remotely! This gives you more flexibility and time to spend with family or on hobbies. Receive your normal salary this turn and gain an immediate bonus to represent the savings on transportation and work clothes.')
+    BIRTHDAY_PARTY = (35, 'Birthday Party', "It's time to celebrate! One of your children has a birthday. You're throwing a party complete with cake, games, and party favors. Pay U$$ 7,500 for the party expenses.")
+    WINDFALL = (36, 'Windfall', "You've received an unexpected windfall, perhaps from a forgotten investment or a distant relative. Collect U$$ 20,000 bonus to represent the unexpected influx of money.")
+
+    def __init__(self, posicao, title, description):
+        self.posicao = posicao
+        self.title = title
+        self.description = description
 
 class ActorPlayer(DogPlayerInterface):
     def __init__(self, master):
@@ -54,28 +99,38 @@ class ActorPlayer(DogPlayerInterface):
         if conn_message != 'Conectado a Dog Server':
             return
 
-        match_message = self.start_match()
-        if match_message == 'Jogadores insuficientes':
-            self.init_interface.set_waiting_other_players()
-            return
+        #match_message = self.start_match() FIXME remove comments
+        #if match_message == 'Jogadores insuficientes':
+        #    self.init_interface.set_waiting_other_players()
+        #    return
 
         self.render_game_interface()
         
     def render_init_interface(self):
+        if self.game_interface:
+            self.game_interface.frame.destroy()
+            self.game_interface = None
+
         self.player_name = ''
         self.init_interface = InitInterface(self.master)
         self.init_interface.button.configure(command=self.start_game)
 
     def render_game_interface(self):
-        self.init_interface.frame.destroy()  # Close the initial page
-        self.init_interface = None
-        self.game_interface = GameInterface(self.master)
+        if self.init_interface:
+            self.init_interface.frame.destroy()  # Close the initial page
+            self.init_interface = None
+        
+        self.game_interface = GameInterface(self.master, self.player_name)
 
     def receive_start(self, start_status):
         message = start_status.get_message()
         messagebox.showinfo(message=message)
         self.render_game_interface()
-        
+
+    def receive_withdrawal_notification(self):
+        messagebox.showwarning("Warning", "Some player left, this is the end of the game.")
+        self.render_init_interface()
+
 class InitInterface(ActorPlayer):
     def __init__(self, master):
         self.master = master
@@ -144,7 +199,7 @@ class InitInterface(ActorPlayer):
         self.button.configure(text="Aguardando outros Jogadores", command=None, style="Blue.TButton", cursor='watch')
 
 class GameInterface:
-    def __init__(self, master):
+    def __init__(self, master, player_name):
         self.master = master
         self.master.geometry(f"{LARGURA_TABULEIRO+300}x{ALTURA_TABULEIRO}")
 
@@ -170,6 +225,10 @@ class GameInterface:
 
         self.jogadores = self._criar_jogadores()
 
+        self.player_name = player_name
+        self.player_text = self.canvas.create_text(LARGURA_CASA + 10, LARGURA_CASA + 10, 
+                                                    text=f"#{player_name}", anchor="nw",
+                                                    font=("Arial", 16, "bold"), fill="#172934")
         self.cash_text = self.canvas.create_text(LARGURA_TABULEIRO - LARGURA_CASA - 10, LARGURA_CASA + 10,
                                                   text=f"R$ 1000", anchor="ne",
                                                   font=("Arial", 16, "bold"), fill="green")
@@ -194,14 +253,22 @@ class GameInterface:
         self.canvas.coords(jogador.pino, centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio)
 
     def desenhar_casas(self):
-        for i in range(NUM_CASAS):
+        for i in list(range(10, 20)) + list(range(20, 30)) + list(range(0, 10)) + list(range(30, 36)):
             x, y = self.coordenadas_casa(i)
             cor = CORES[i % len(CORES)]
+            subcor = LIGHT_CORES[i % len(LIGHT_CORES)]
+
+            # Calculate center of casa
+            center_x = x + LARGURA_CASA / 2
+            center_y = y + LARGURA_CASA / 2
+            
             if i == 0:
-                self.canvas.create_rectangle(x, y, x + LARGURA_CASA, y + LARGURA_CASA, fill="#343434", outline="black")
+                self.canvas.create_rectangle(x, y, x + LARGURA_CASA, y + LARGURA_CASA, fill="#fefefe", outline="black")
+                self.canvas.create_text(center_x, center_y, text=str(i+1), fill='#172934', font=("Arial", 12, "bold"))
             else:
                 self.canvas.create_rectangle(x, y, x + LARGURA_CASA, y + LARGURA_CASA, fill=cor, outline="black")
-
+                self.canvas.create_text(center_x, center_y, text=str(i+1), fill=subcor, font=("Arial", 12, "bold"))        
+    
     def _criar_jogadores(self):
         cores = ['red', 'blue', 'green', 'yellow', 'purple']
         jogadores = []
@@ -259,16 +326,15 @@ class GameInterface:
         if index < COMPRIMENTO_LADO:
             x = index * espaco
             y = 0
-        elif index < 2 * COMPRIMENTO_LADO:
+        elif index < 2 * COMPRIMENTO_LADO - 1:
             x = LARGURA_TABULEIRO - LARGURA_CASA
-            y = (index - COMPRIMENTO_LADO) * espaco
-        elif index < 3 * COMPRIMENTO_LADO:
-            x = LARGURA_TABULEIRO - LARGURA_CASA - (index - 2 * COMPRIMENTO_LADO) * espaco
+            y = (index - COMPRIMENTO_LADO + 1) * espaco
+        elif index < 3 * COMPRIMENTO_LADO - 2:
+            x = LARGURA_TABULEIRO - LARGURA_CASA - (index - 2 * COMPRIMENTO_LADO + 2) * espaco
             y = ALTURA_TABULEIRO - LARGURA_CASA
         else:
             x = 0
-            y = ALTURA_TABULEIRO - LARGURA_CASA - (index - 3 * COMPRIMENTO_LADO) * espaco
-
+            y = ALTURA_TABULEIRO - LARGURA_CASA - (index - 3 * COMPRIMENTO_LADO + 3) * espaco
         return x, y
 
     def desenhar_dado(self, numero):
@@ -309,6 +375,22 @@ class GameInterface:
         self.btn_girar.place(x=LARGURA_TABULEIRO // 2 - self.btn_girar.winfo_reqwidth() // 2,
                              y=ALTURA_TABULEIRO // 2 + LARGURA_CASA + 60)
     
+    def handle_new_casa_events(self, jogador):
+        def close_custom_dialog():
+            print("Button 1 clicked")
+
+        new_pos = jogador.posicao
+        
+        buttons = [{"text": "OK", "command": close_custom_dialog}]
+
+        for casa in Casa:
+            if new_pos == casa.posicao:
+                title = casa.title
+                description = casa.description
+                d = CustomDialog(self.master, title=title, message=description, buttons=buttons)
+                break
+        #d = CustomDialog(self.master, title="You landed on a special casa!", 
+        #                    message=f"{self.player_name} landed on casa 5.", buttons=buttons)
 
     def girar_dado(self, jogador):
         passos = randint(1, 6)
@@ -318,6 +400,7 @@ class GameInterface:
         self.canvas.delete("dado")
         self.desenhar_dado(passos)
         self.atualizar_posicao_jogador(jogador)
+        self.handle_new_casa_events(jogador)
         # self.update_cash(jogador) FIXME
 
     def start_game(self):
