@@ -8,6 +8,7 @@ from PIL import Image, ImageTk
 from components.CustomDialog import CustomDialog
 from utils.mask_dollar import mask_dollar
 from enum import Enum
+import math
 
 NUM_JOGADORES = 5
 NUM_CASAS = 36
@@ -32,11 +33,14 @@ class Jogador:
         self.is_vehicle_insured = False
 
     def increase_salary_10_percent(self):
-        self.salario *= 1.1
+        self.salario = math.ceil(1.1 * self.salario)
+    
+    def increase_salary_20_percent(self):
+        self.salario = math.ceil(1.2 * self.salario)
     
     def add_child(self):
         if self.child_amount == 4:
-            raise TypeError("Child amount limit is 4")
+            raise ValueError('A player can only have up to 4 children. So no events will be reflected back to you this turn.')
         self.child_amount += 1
 
     def handle_default_turn_income(self):
@@ -52,12 +56,35 @@ class Jogador:
 
     def apply_income_tax(self):
         BASE = 0.7
-        self.dinheiro *= BASE
+        self.dinheiro = math.ceil(BASE * self.dinheiro)
     
+    def handle_internship(self):
+        self.dinheiro -= math.ceil(0.5 * self.salario)
+    
+    def handle_volunter_work(self):
+        self.dinheiro -= self.salario
 
-    
+    def buy_life_insurance(self):
+        if self.is_life_insured:
+            raise ValueError("Player already has life insurance. So no events will be reflected back to you this turn.")
+
+        self.dinheiro -= 10000
+        self.is_life_insured = True
+
+    def buy_car_insurance(self):
+        if self.is_vehicle_insured:
+            raise ValueError("Player already has vehicle insurance. So no events will be reflected back to you this turn.")
+        
+        self.dinheiro -= 8000
+        self.is_vehicle_insured = True
+
+    def set_retirement(self):
+        if self.is_retired:
+            raise ValueError('You already is retired. So no events will be reflected back to you this turn.')
+        self.is_retired = True
+        
 class Casa(Enum):
-    INIT = (0, 'Init House', 'Init House Description', 0)
+    INIT = (0, 'Init House', 'Today is your lucky day! By passing at the beginning, you have won U$$ 60000.', 60000)
     GRADUATION = (1, 'You graduated', 'Congratulations, you graduated!! With that you must pay tuition of U$$ 20000 from your college.', -20000)
     BIRTH = (2, 'Birth', 'Congratulations, a new child has joined your family!. Remember, with every joy comes new responsibilities. Each turn you must pay U$$ 500 by child.', 0)
     LOTTERY = (3, 'Lottery', "You've won the lottery! Collect an immediate U$$ 75000 bonus to represent your winnings.", 75000)
@@ -72,7 +99,7 @@ class Casa(Enum):
     CORAL_REEF_DIVE = (12, 'Coral Reef Dive', "You've decided to dive in the Coral Reef! Pay U$$ 6000 to cover the dive costs.", -6000)
     POST_GRADUATION = (13, 'Post-Graduation', 'You have completed your postgraduate studies! This milestone is an important step in your career and deserves a reward. Collect U$$ 10000 bonus to reflect your increased qualifications.', 10000)
     SCHOOL_CHANGE = (14, 'School Change', "Your child's education journey requires a school change. Whether it's due to a move or just seeking better opportunities, there are costs involved. Pay U$$ 7000 for the move, new uniforms, and other related expenses.", -7000)
-    LIFE_INSURANCE = (15, 'Life Insurance', "You've decided to buy life insurance. Pay U$$ 10000 to represent the insurance premium.", -10000) #CHECK 
+    LIFE_INSURANCE = (15, 'Life Insurance', "You've decided to buy life insurance. Pay U$$ 10000 to represent the insurance premium.", 0) 
     MARATHON = (16, 'Marathon', "You've decided to run a marathon! Pay U$$ 2500 to cover the registration and training costs.", -2500)
     ENTREPRENEUR = (17, 'Entrepreneur', 'You have taken the bold step of starting your own business! This exciting venture comes with its costs. Pay U$$ 25000 to cover the startup costs.', -25000)
     FAMILY_TRIP = (18, 'Family Trip', "Quality time alert! You're taking a well-deserved family trip. It's time for relaxation and adventures. Pay U$$ 12000 for the trip expenses, including travel, accommodation, and daily allowances.", -12000)
@@ -80,7 +107,7 @@ class Casa(Enum):
     SPACE_TRAVEL = (20, 'Space Travel', "You've decided to go to space! Pay U$$ 30000 to cover the travel costs.", -30000)
     RETIREMENT = (21, 'Retirement', "You've retired after a long and successful career! It's time to relax and enjoy the fruits of your labor. Now, you will collect U$$ 5000 bonus each turn.", 0)
     CHILDREN_WEDDING = (22, "Children's Wedding", "Your child is getting married! A proud and emotional moment for you. However, weddings can be expensive. Pay U$$ 17500 for the wedding party, from the venue to the food and the decorations.", -17500)
-    CAR_INSURANCE = (23, 'Car Insurance', "You've decided to buy car insurance. Pay U$$ 8000 amount to represent the insurance premium.", -8000)
+    CAR_INSURANCE = (23, 'Car Insurance', "You've decided to buy car insurance. Pay U$$ 8000 amount to represent the insurance premium.", 0)
     AFRICAN_SAFARI = (24, 'African Safari', "You've decided to go on a safari in Africa! Pay U$$ 16000 amount to cover the trip costs.", -16000)
     CAREER_CHANGE = (25, 'Career Change', 'You have decided to change your career! This brave move opens up new opportunities, your salary increases by 20 percent.', 0)
     MUSIC_LESSON = (26, 'Music Lesson', 'Your children have shown an interest in music and want to learn an instrument. This could be the start of a lifelong passion or even a career. Pay U$$ 2500 for the music lessons, including the cost of the instrument and the tutor.', -2500)
@@ -470,16 +497,46 @@ class GameInterface:
         self.btn_girar.place(x=LARGURA_TABULEIRO // 2 - self.btn_girar.winfo_reqwidth() // 2,
                              y=ALTURA_TABULEIRO // 2 + LARGURA_CASA)
     
-    def handle_new_casa_events(self, jogador):
+    def handle_new_casa_events(self, jogador: Jogador):
         new_pos = jogador.posicao
 
         for casa in Casa:
             if new_pos == casa.posicao:
+                
+                jogador.handle_default_turn_income()
+                
                 jogador.dinheiro += casa.transaction
                 
+                try:
+                    is_required_child = casa == Casa.CHILD_GRADUATION or casa == Casa.SCHOOL_CHANGE or casa == Casa.CHILDREN_WEDDING \
+                        or casa == Casa.MUSIC_LESSON or casa == Casa.SPORTS_COMPETITION or casa == Casa.BIRTHDAY_PARTY
+
+                    if is_required_child and jogador.child_amount == 0:
+                        raise ValueError("A child is required for this position. So no events will be reflected back to you this turn.")
+
+                    if casa == Casa.BIRTH or casa == Casa.ADOPTION:
+                        jogador.add_child()
+                    elif casa == Casa.PROMOTION:
+                        jogador.increase_salary_10_percent()
+                    elif casa == Casa.INTERNSHIP:
+                        jogador.handle_internship()
+                    elif casa == Casa.LIFE_INSURANCE:
+                        jogador.buy_life_insurance()
+                    elif casa == Casa.CAR_INSURANCE:
+                        jogador.buy_car_insurance()
+                    elif casa == Casa.RETIREMENT:
+                        jogador.set_retirement()
+                    elif casa == Casa.CAREER_CHANGE:
+                        jogador.increase_salary_20_percent()
+                    elif casa == Casa.INCOME_TAX:
+                        jogador.apply_income_tax()
+                    elif casa == Casa.VOLUNTEER_WORK:
+                        jogador.handle_volunter_work()
+                except Exception as err:
+                    CustomDialog(self.master, title=casa.title, message=err.args[0])
+                else:
+                    CustomDialog(self.master, title=casa.title, message=casa.description)
                 self.canvas.itemconfigure(self.cash_text, text=f"U$$ {jogador.dinheiro}")
-                d = CustomDialog(self.master, title=casa.title, message=casa.description)
-                
                 break
         
         
