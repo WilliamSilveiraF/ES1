@@ -323,34 +323,97 @@ class GameInterface:
         pino = self.canvas.create_oval(centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio, fill=cor)
         return pino
 
+    def _create_rounded_rect(self, x1, y1, x2, y2, radius=25, **kwargs):
+        """Draw a rounded rectangle"""
+        points = [x1+radius, y1,
+                x1+radius, y1,
+                x2-radius, y1,
+                x2-radius, y1,
+                x2, y1, 
+                x2, y1+radius,
+                x2, y1+radius,
+                x2, y2-radius,
+                x2, y2-radius,
+                x2, y2,
+                x2-radius, y2,
+                x2-radius, y2,
+                x1+radius, y2,
+                x1+radius, y2,
+                x1, y2,
+                x1, y2-radius,
+                x1, y2-radius,
+                x1, y1+radius,
+                x1, y1+radius,
+                x1, y1]
+        return self.right_frame.create_polygon(points, **kwargs, smooth=True)
+
     def _criar_cards(self):
         card_width = int(0.8 * 300)
         card_height = int(ALTURA_TABULEIRO / 4)
         card_space = int((ALTURA_TABULEIRO - 3 * card_height) / 4)
 
         x1 = (300 - card_width) // 2
-        subtitles = ["Perfil", "Seguros", "Dívidas"]
+        subtitles = ["#Jogador 1", "#Jogador 2", "#Jogador 3"]
 
         for i in range(3):
+            if i == 0:
+                [shadow_color, card_bg, card_outline, card_title] = ['#d1e8aa', '#c8df99', '#8ac543', '#22471a']
+            else:
+                [shadow_color, card_bg, card_outline, card_title] = ['#ebf8ff', '#70cdf6', '#aadef5', '#043c50']
+            ###fbe34c
             y1 = card_space * (i + 1) + card_height * i
             x2 = x1 + card_width
             y2 = y1 + card_height
-            self.right_frame.create_rectangle(x1, y1, x2, y2, fill="white", outline="black")
-            self.right_frame.create_text(x1 + 10, y1 + 10, text=subtitles[i], anchor="nw", font=("Arial", 14, "bold"))
+            # shadow
+            self._create_rounded_rect(x1+5, y1+5, x2+5, y2+5, radius=20, fill=shadow_color)
+            # card
+            self._create_rounded_rect(x1, y1, x2, y2, radius=20, fill=card_bg, outline=card_outline)
+            self.right_frame.create_text(x1 + 10, y1 + 10, text=subtitles[i], anchor="nw", font=("Arial", 14, "bold"), fill=card_title)
 
-        first_card_lines = ["Quantidade de filhos: 0", "Status civil: Solteiro", "Ações: Não", "Carreira: Negócios"]
+        first_card_lines = [
+            { 'field': 'Bank', 'value': 'U$$ 100000' },
+            { 'field': 'Salary', 'value': 'U$$ 5000' },
+            { 'field': 'Childs', 'value': 'U$$ 0' },
+            { 'field': 'Retirement', 'value': 'U$$ 5000' },
+            { 'field': 'Life insurance', 'value': 'Yes' },
+            { 'field': 'Vehicle insurance', 'value': 'Yes' }
+        ]
         y_start = card_space + 40
 
         for line in first_card_lines:
-            self.right_frame.create_text(x1 + 10, y_start, text=line, anchor="nw", font=("Arial", 12))
-            y_start += 20
+            self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#22471a')
+            self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12, "bold"), fill='#22471a')
+            y_start += 22
 
-        second_card_lines = ["Seguro de Vida: Sim", "Seguro veicular: Sim", "Seguro de Casa: Não"]
+        second_card_lines = [
+            { 'field': 'Bank', 'value': 'U$$ 142500' },
+            { 'field': 'Salary', 'value': 'U$$ 5500' },
+            { 'field': 'Childs', 'value': 'U$$ 0' },
+            { 'field': 'Retirement', 'value': 'U$$ 0' },
+            { 'field': 'Life insurance', 'value': 'No' },
+            { 'field': 'Vehicle insurance', 'value': 'Yes' }
+        ]
         y_start = 2 * card_space + card_height + 40
 
         for line in second_card_lines:
-            self.right_frame.create_text(x1 + 10, y_start, text=line, anchor="nw", font=("Arial", 12))
-            y_start += 20
+            self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#043c50')
+            self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12), fill='#043c50')
+            y_start += 22
+        
+        third_card_lines = [
+            { 'field': 'Bank', 'value': 'U$$ 142500' },
+            { 'field': 'Salary', 'value': 'U$$ 5500' },
+            { 'field': 'Childs', 'value': 'U$$ 0' },
+            { 'field': 'Retirement', 'value': 'U$$ 0' },
+            { 'field': 'Life insurance', 'value': 'No' },
+            { 'field': 'Vehicle insurance', 'value': 'Yes' }
+        ]
+        y_start = 3 * card_space + 2 * card_height + 40
+
+        for line in third_card_lines:
+            self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#043c50')
+            self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12), fill='#043c50')
+            y_start += 22
 
     def coordenadas_casa(self, index):
         espaco = (LARGURA_TABULEIRO - LARGURA_CASA) / (COMPRIMENTO_LADO - 1)
