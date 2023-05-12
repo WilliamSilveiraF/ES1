@@ -13,5 +13,5 @@ def mask_dollar(amount):
     masked_dollars = ''.join(['*' if i < len(dollars) - 4 else dollars[i] for i in range(len(dollars))])
 
     # Return the masked dollar amount
-    return f'${masked_dollars}.{cents}'
+    return f'{masked_dollars}.{cents}'
 

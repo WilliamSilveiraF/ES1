@@ -6,6 +6,7 @@ from dog.dog_interface import DogPlayerInterface
 from dog.dog_actor import DogActor
 from PIL import Image, ImageTk
 from components.CustomDialog import CustomDialog
+from utils.mask_dollar import mask_dollar
 from enum import Enum
 
 NUM_JOGADORES = 5
@@ -18,8 +19,8 @@ CORES = ["#e6bd22", "#148bc6", "#c01960", "#54ad39"]
 LIGHT_CORES = ["#edde22", "#56c2f0", "#e76da8", "#b3d880"]
 
 class Jogador:
-    def __init__(self, nome, cor, posicao, salario):
-        self.nome = nome
+    def __init__(self, player_id, cor, posicao, salario):
+        self.player_id = player_id
         self.cor = cor
         self.posicao = posicao
         self.salario = salario
@@ -265,8 +266,8 @@ class GameInterface:
                                                   font=("Arial", 16, "bold"), fill="green")
         self._criar_btn_girar()
         
-        self.canvas.create_text(LARGURA_TABULEIRO // 2, ALTURA_TABULEIRO // 2 + LARGURA_CASA + 20, text="Jogo da Vida",
-                                font=("Futura", 30, "bold italic"), fill="black")
+        self.canvas.create_text(LARGURA_CASA + 20, ALTURA_TABULEIRO - LARGURA_CASA - 20, text="The Game Of Life",
+                        anchor='sw', font=("Futura", 12, "italic"), fill="black")
 
         self._criar_cards()
 
@@ -394,31 +395,31 @@ class GameInterface:
     
     def _criar_btn_girar(self):
         style = ttk.Style()
-        style.configure("Custom.TButton", bordercolor="black", borderwidth=4, relief="groove",
+        style.configure("Dice.TButton", bordercolor="black", borderwidth=4, relief="groove",
                         font=("Arial", 10, "bold"), background="white")
-        style.layout("Custom.TButton",
+        style.layout("Dice.TButton",
                      [('Button.border', {'sticky': 'nswe', 'border': '1', 'children':
                          [('Button.padding', {'sticky': 'nswe', 'border': '1', 'children':
                              [('Button.label', {'sticky': 'nswe'})]})]})])
 
-        self.btn_girar = ttk.Button(self.frame, text="Girar Dados",
-                                    command=lambda: self.girar_dado(self.jogadores[0]), style="Custom.TButton")
+        self.btn_girar = ttk.Button(self.frame, text="Roll Dice",
+                                    command=lambda: self.girar_dado(self.jogadores[0]), style="Dice.TButton", cursor="hand2")
         self.btn_girar.place(x=LARGURA_TABULEIRO // 2 - self.btn_girar.winfo_reqwidth() // 2,
-                             y=ALTURA_TABULEIRO // 2 + LARGURA_CASA + 60)
+                             y=ALTURA_TABULEIRO // 2 + LARGURA_CASA)
     
     def handle_new_casa_events(self, jogador):
-        def close_custom_dialog():
-            print("Button 1 clicked")
-
         new_pos = jogador.posicao
-        print(new_pos)
-        buttons = [{"text": "OK", "command": close_custom_dialog}]
 
         for casa in Casa:
             if new_pos == casa.posicao:
+                jogador.dinheiro += casa.transaction
                 
-                d = CustomDialog(self.master, title=casa.title, message=casa.description, buttons=buttons)
+                self.canvas.itemconfigure(self.cash_text, text=f"U$$ {jogador.dinheiro}")
+                d = CustomDialog(self.master, title=casa.title, message=casa.description)
+                
                 break
+        
+        
         #d = CustomDialog(self.master, title="You landed on a special casa!", 
         #                    message=f"{self.player_name} landed on casa 5.", buttons=buttons)
 
@@ -431,16 +432,9 @@ class GameInterface:
         self.desenhar_dado(passos)
         self.atualizar_posicao_jogador(jogador)
         self.handle_new_casa_events(jogador)
-        # self.update_cash(jogador) FIXME
-
+    
     def start_game(self):
         print('start_game')
-    
-    def update_cash(self, jogador):
-        jogador.dinheiro += 100 
-        self.canvas.itemconfigure(self._cash_text, text=f"R$ {jogador.dinheiro}")
-
-
 
 def main():
     root = Tk()
