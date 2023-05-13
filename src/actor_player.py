@@ -20,13 +20,13 @@ CORES = ["#e6bd22", "#148bc6", "#c01960", "#54ad39"]
 LIGHT_CORES = ["#edde22", "#56c2f0", "#e76da8", "#b3d880"]
 
 class Jogador:
-    def __init__(self, player_id, cor, posicao, salario):
+    def __init__(self, player_id, cor):
         self.player_id = player_id
         self.cor = cor
-        self.posicao = posicao
-        self.salario = salario
+        self.posicao = 0
+        self.salario = 2000
         self.child_amount = 0
-        self.dinheiro = 100000
+        self.dinheiro = -1000000
         self.is_retired = False
         self.is_playing = True
         self.is_life_insured = False
@@ -82,9 +82,26 @@ class Jogador:
         if self.is_retired:
             raise ValueError('You already is retired. So no events will be reflected back to you this turn.')
         self.is_retired = True
-        
+    
+    def get_card_content(self):
+        return [
+            { 'field': 'Bank', 'value': f'U$$ {self.dinheiro}' },
+            { 'field': 'Salary', 'value': f'U$$ {self.salario}' },
+            { 'field': 'Childs', 'value': f'{self.child_amount}' },
+            { 'field': 'Retirement', 'value': 'U$$ 5000' if self.is_retired else 'U$$ 0' },
+            { 'field': 'Life insurance', 'value': 'Yes' if self.is_life_insured else 'No' },
+            { 'field': 'Vehicle insurance', 'value': 'Yes' if self.is_vehicle_insured else 'No' }
+        ]
+    
+    def set_out_of_match(self):
+        self.is_playing = False
+
+    @property
+    def is_broke(self):
+        return self.dinheiro < 0
+
 class Casa(Enum):
-    INIT = (0, 'Init House', 'Today is your lucky day! By passing at the beginning, you have won U$$ 60000.', 60000)
+    INIT = (0, 'Init House', 'Today is your lucky day! By passing at the beginning, you have won U$$ 10000.', 10000)
     GRADUATION = (1, 'You graduated', 'Congratulations, you graduated!! With that you must pay tuition of U$$ 20000 from your college.', -20000)
     BIRTH = (2, 'Birth', 'Congratulations, a new child has joined your family!. Remember, with every joy comes new responsibilities. Each turn you must pay U$$ 500 by child.', 0)
     LOTTERY = (3, 'Lottery', "You've won the lottery! Collect an immediate U$$ 75000 bonus to represent your winnings.", 75000)
@@ -288,9 +305,6 @@ class GameInterface:
         self.player_text = self.canvas.create_text(LARGURA_CASA + 10, LARGURA_CASA + 10, 
                                                     text=f"#{player_name}", anchor="nw",
                                                     font=("Arial", 16, "bold"), fill="#172934")
-        self.cash_text = self.canvas.create_text(LARGURA_TABULEIRO - LARGURA_CASA - 10, LARGURA_CASA + 10,
-                                                  text=f"R$ 1000", anchor="ne",
-                                                  font=("Arial", 16, "bold"), fill="green")
         self._criar_btn_girar()
         
         self.canvas.create_text(LARGURA_CASA + 20, ALTURA_TABULEIRO - LARGURA_CASA - 20, text="The Game Of Life",
@@ -332,7 +346,7 @@ class GameInterface:
         cores = ['red', 'blue', 'green', 'yellow', 'purple']
         jogadores = []
         for i in range(NUM_JOGADORES):
-            jogador = Jogador(f'Jogador {i + 1}', cores[i], 0, 0)
+            jogador = Jogador(f'Jogador {i + 1}', cores[i])
             jogadores.append(jogador)
         return jogadores
 
@@ -375,6 +389,10 @@ class GameInterface:
         return self.right_frame.create_polygon(points, **kwargs, smooth=True)
 
     def _criar_cards(self):
+        self.first_card_texts = []
+        self.second_card_texts = []
+        self.third_card_texts = []
+        
         card_width = int(0.8 * 300)
         card_height = int(ALTURA_TABULEIRO / 4)
         card_space = int((ALTURA_TABULEIRO - 3 * card_height) / 4)
@@ -387,7 +405,7 @@ class GameInterface:
                 [shadow_color, card_bg, card_outline, card_title] = ['#d1e8aa', '#c8df99', '#8ac543', '#22471a']
             else:
                 [shadow_color, card_bg, card_outline, card_title] = ['#ebf8ff', '#70cdf6', '#aadef5', '#043c50']
-            ###fbe34c
+
             y1 = card_space * (i + 1) + card_height * i
             x2 = x1 + card_width
             y2 = y1 + card_height
@@ -408,8 +426,9 @@ class GameInterface:
         y_start = card_space + 40
 
         for line in first_card_lines:
-            self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#22471a')
-            self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12, "bold"), fill='#22471a')
+            field_text = self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#22471a')
+            value_text = self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12, "bold"), fill='#22471a')
+            self.first_card_texts.append((field_text, value_text))
             y_start += 22
 
         second_card_lines = [
@@ -423,10 +442,11 @@ class GameInterface:
         y_start = 2 * card_space + card_height + 40
 
         for line in second_card_lines:
-            self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#043c50')
-            self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12), fill='#043c50')
+            field_text = self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#043c50')
+            value_text = self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12, "bold"), fill='#043c50')
+            self.second_card_texts.append((field_text, value_text))
             y_start += 22
-        
+
         third_card_lines = [
             { 'field': 'Bank', 'value': 'U$$ 142500' },
             { 'field': 'Salary', 'value': 'U$$ 5500' },
@@ -441,7 +461,19 @@ class GameInterface:
             self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#043c50')
             self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12), fill='#043c50')
             y_start += 22
+    
+    def _update_card(self, card_number, new_lines):
+        if card_number == 1:
+            texts = self.first_card_texts
+        elif card_number == 2:
+            texts = self.second_card_texts
+        else:
+            texts = self.third_card_texts
 
+        for i, line in enumerate(new_lines):
+            self.right_frame.itemconfig(texts[i][0], text=line['field'])
+            self.right_frame.itemconfig(texts[i][1], text=line['value'])
+    
     def coordenadas_casa(self, index):
         espaco = (LARGURA_TABULEIRO - LARGURA_CASA) / (COMPRIMENTO_LADO - 1)
         x, y = 0, 0
@@ -466,8 +498,9 @@ class GameInterface:
         raio = LARGURA_CASA // 8
         dist_multiplier = 2
 
-        self.canvas.delete("dado")
-        self.canvas.create_rectangle(centro_x - meio_lado, centro_y - meio_lado, centro_x + meio_lado, centro_y + meio_lado, fill="white", outline="black", tags="dado")
+        self._erase_dice()
+
+        self.dado_rectangle = self.canvas.create_rectangle(centro_x - meio_lado, centro_y - meio_lado, centro_x + meio_lado, centro_y + meio_lado, fill="white", outline="black")
 
         pontos = {
             1: [(0, 0)],
@@ -478,11 +511,21 @@ class GameInterface:
             6: [(-1, -1), (-1, 0), (-1, 1), (1, -1), (1, 0), (1, 1)]
         }
 
+        self.dado_ovals = []
         for dx, dy in pontos[numero]:
             x = centro_x + dx * raio * dist_multiplier
             y = centro_y + dy * raio * dist_multiplier
-            self.canvas.create_oval(x - raio, y - raio, x + raio, y + raio, fill="black")
+            oval = self.canvas.create_oval(x - raio, y - raio, x + raio, y + raio, fill="black")
+            self.dado_ovals.append(oval)
     
+    def _erase_dice(self):
+        if hasattr(self, 'dado_rectangle'):
+            self.canvas.delete(self.dado_rectangle)
+        if hasattr(self, 'dado_ovals'):
+            for oval in self.dado_ovals:
+                self.canvas.delete(oval)
+            self.dado_ovals = []
+
     def _criar_btn_girar(self):
         style = ttk.Style()
         style.configure("Dice.TButton", bordercolor="black", borderwidth=4, relief="groove",
@@ -536,26 +579,32 @@ class GameInterface:
                     CustomDialog(self.master, title=casa.title, message=err.args[0])
                 else:
                     CustomDialog(self.master, title=casa.title, message=casa.description)
-                self.canvas.itemconfigure(self.cash_text, text=f"U$$ {jogador.dinheiro}")
                 break
-        
-        
-        #d = CustomDialog(self.master, title="You landed on a special casa!", 
-        #                    message=f"{self.player_name} landed on casa 5.", buttons=buttons)
 
-    def girar_dado(self, jogador):
+    def girar_dado(self, jogador: Jogador):
         passos = randint(1, 6)
         jogador.posicao += passos
 
-        centro_x, centro_y = LARGURA_TABULEIRO // 2, ALTURA_TABULEIRO // 2
         self.canvas.delete("dado")
         self.desenhar_dado(passos)
         self.atualizar_posicao_jogador(jogador)
         self.handle_new_casa_events(jogador)
-    
-    def start_game(self):
-        print('start_game')
 
+        if jogador.is_broke:
+            jogador.set_out_of_match()
+            
+            self.btn_girar.destroy()
+            self._erase_dice()
+            #self.desenhar_dado(0)
+            
+            # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOSED
+
+        
+        new_card_content = jogador.get_card_content()
+        self._update_card(1, new_card_content)
+
+    def start_game(self):
+        print('start game')
 def main():
     root = Tk()
     ActorPlayer(root)
