@@ -7,10 +7,10 @@ from dog.dog_actor import DogActor
 from PIL import Image, ImageTk
 from components.CustomDialog import CustomDialog
 from utils.mask_dollar import mask_dollar
-from enum import Enum
+from logic.BoardHouse import BoardHouse
 import math
 
-NUM_JOGADORES = 5
+NUM_JOGADORES = 3
 NUM_CASAS = 36
 LARGURA_TABULEIRO = 800
 ALTURA_TABULEIRO = 800
@@ -19,14 +19,18 @@ COMPRIMENTO_LADO = 10
 CORES = ["#e6bd22", "#148bc6", "#c01960", "#54ad39"]
 LIGHT_CORES = ["#edde22", "#56c2f0", "#e76da8", "#b3d880"]
 
+
 class Jogador:
+    INIT_SALARY = 2000
+    INIT_BANK = 100000
+
     def __init__(self, player_id, cor):
         self.player_id = player_id
         self.cor = cor
         self.posicao = 0
-        self.salario = 2000
+        self.salario = self.INIT_SALARY
         self.child_amount = 0
-        self.dinheiro = -1000000
+        self.dinheiro = self.INIT_BANK
         self.is_retired = False
         self.is_playing = True
         self.is_life_insured = False
@@ -99,50 +103,6 @@ class Jogador:
     @property
     def is_broke(self):
         return self.dinheiro < 0
-
-class Casa(Enum):
-    INIT = (0, 'Init House', 'Today is your lucky day! By passing at the beginning, you have won U$$ 10000.', 10000)
-    GRADUATION = (1, 'You graduated', 'Congratulations, you graduated!! With that you must pay tuition of U$$ 20000 from your college.', -20000)
-    BIRTH = (2, 'Birth', 'Congratulations, a new child has joined your family!. Remember, with every joy comes new responsibilities. Each turn you must pay U$$ 500 by child.', 0)
-    LOTTERY = (3, 'Lottery', "You've won the lottery! Collect an immediate U$$ 75000 bonus to represent your winnings.", 75000)
-    MOUNT_EVEREST = (4, 'Mount Everest Expedition', "You've decided to climb Mount Everest! Pay U$$ 5000 to cover the expedition costs.", -5000)
-    PROMOTION = (5, 'Promotion', 'Congratulations, your salary increases by 10 percent.', 0)
-    ADOPTION = (6, 'Adoption', 'Your heart and home have expanded with the adoption of a child. Celebrate this moment and remember, every child is a bundle of joy and a responsibility to shape the future. Each turn you must pay U$$ 500 by child.', 0)
-    ROBBERY = (7, 'Robbery', "Unfortunately, you've been robbed. Pay U$$ 10000 to represent the financial loss.", -10000)
-    BACKPACKING = (8, 'Backpacking Trip', "You've decided to go backpacking through Europe! Pay U$$ 15000 to cover the trip costs.", -15000)
-    INTERNSHIP = (9, 'Internship', 'You have landed an internship in your field! This is a great step towards your career. You will gain valuable experience, but you will earn only half your salary this turn as internships are typically low-paying.', 0)
-    CHILD_GRADUATION = (10, "Child's Graduation", 'Your child has hit a significant milestone - university graduation! This proud moment comes with expenses. Make a U$$ 5000 payment to cover the cost of the graduation ceremony, from the gown to the celebratory dinner.', -5000)
-    INVESTMENT = (11, 'Investment', "You've decided to invest some money. You will gain U$$ 12500.", 12500)
-    CORAL_REEF_DIVE = (12, 'Coral Reef Dive', "You've decided to dive in the Coral Reef! Pay U$$ 6000 to cover the dive costs.", -6000)
-    POST_GRADUATION = (13, 'Post-Graduation', 'You have completed your postgraduate studies! This milestone is an important step in your career and deserves a reward. Collect U$$ 10000 bonus to reflect your increased qualifications.', 10000)
-    SCHOOL_CHANGE = (14, 'School Change', "Your child's education journey requires a school change. Whether it's due to a move or just seeking better opportunities, there are costs involved. Pay U$$ 7000 for the move, new uniforms, and other related expenses.", -7000)
-    LIFE_INSURANCE = (15, 'Life Insurance', "You've decided to buy life insurance. Pay U$$ 10000 to represent the insurance premium.", 0) 
-    MARATHON = (16, 'Marathon', "You've decided to run a marathon! Pay U$$ 2500 to cover the registration and training costs.", -2500)
-    ENTREPRENEUR = (17, 'Entrepreneur', 'You have taken the bold step of starting your own business! This exciting venture comes with its costs. Pay U$$ 25000 to cover the startup costs.', -25000)
-    FAMILY_TRIP = (18, 'Family Trip', "Quality time alert! You're taking a well-deserved family trip. It's time for relaxation and adventures. Pay U$$ 12000 for the trip expenses, including travel, accommodation, and daily allowances.", -12000)
-    INHERITANCE = (19, 'Inheritance', "You've inherited a large sum of money. Collect U$$ 100000 bonus to represent the inheritance.", 100000)
-    SPACE_TRAVEL = (20, 'Space Travel', "You've decided to go to space! Pay U$$ 30000 to cover the travel costs.", -30000)
-    RETIREMENT = (21, 'Retirement', "You've retired after a long and successful career! It's time to relax and enjoy the fruits of your labor. Now, you will collect U$$ 5000 bonus each turn.", 0)
-    CHILDREN_WEDDING = (22, "Children's Wedding", "Your child is getting married! A proud and emotional moment for you. However, weddings can be expensive. Pay U$$ 17500 for the wedding party, from the venue to the food and the decorations.", -17500)
-    CAR_INSURANCE = (23, 'Car Insurance', "You've decided to buy car insurance. Pay U$$ 8000 amount to represent the insurance premium.", 0)
-    AFRICAN_SAFARI = (24, 'African Safari', "You've decided to go on a safari in Africa! Pay U$$ 16000 amount to cover the trip costs.", -16000)
-    CAREER_CHANGE = (25, 'Career Change', 'You have decided to change your career! This brave move opens up new opportunities, your salary increases by 20 percent.', 0)
-    MUSIC_LESSON = (26, 'Music Lesson', 'Your children have shown an interest in music and want to learn an instrument. This could be the start of a lifelong passion or even a career. Pay U$$ 2500 for the music lessons, including the cost of the instrument and the tutor.', -2500)
-    INCOME_TAX = (27, 'Income Tax', "It's income tax time. Pay 30 percent of your total money to represent your taxes.", 0)
-    ANTARCTIC_EXPEDITION = (28, 'Antarctic Expedition', "You've decided to visit Antarctica! Pay U$$ 22500 to cover the trip costs.", -22500)
-    VOLUNTEER_WORK = (29, 'Volunteer Work', 'You have decided to do volunteer work. This noble act might not provide a salary this turn, but it brings a great sense of fulfillment.', 0)
-    SPORTS_COMPETITION = (30, 'Sports Competition', "Your children have entered a sports competition! They're excited and nervous. Pay U$$ 3000 for the sports equipment, team uniforms, and other related expenses.", -3000)
-    CHARITY_HOUSE = (31, 'Charity House', "You've decided to make a generous donation to a charity that's close to your heart. Pay U$$ 10000 amount to represent your charitable contribution.", -10000)
-    MOTORCYCLE_JOURNEY = (32, 'Motorcycle Journey on Route 66', "You've decided to ride Route 66 on a motorcycle! Pay U$$ 8000 to cover the trip costs.", -8000)
-    REMOTE_WORK = (33, 'Remote Work', 'You have landed the opportunity to work remotely! This gives you more flexibility and time to spend with family or on hobbies. Receive your normal salary this turn and gain U$$ 3000 bonus to represent the savings on transportation and work clothes.', 3000)
-    BIRTHDAY_PARTY = (34, 'Birthday Party', "It's time to celebrate! One of your children has a birthday. You're throwing a party complete with cake, games, and party favors. Pay U$$ 7500 for the party expenses.", -7500)
-    WINDFALL = (35, 'Windfall', "You've received an unexpected windfall, perhaps from a forgotten investment or a distant relative. Collect U$$ 20000 bonus to represent the unexpected influx of money.", 20000)
-
-    def __init__(self, posicao, title, description, transaction):
-        self.posicao = posicao
-        self.title = title
-        self.description = description
-        self.transaction = transaction
 
 class ActorPlayer(DogPlayerInterface):
     def __init__(self, master):
@@ -316,12 +276,19 @@ class GameInterface:
         self.desenhar_jogadores()
 
     def atualizar_posicao_jogador(self, jogador):
+        raio = LARGURA_CASA // 6
         jogador.posicao %= NUM_CASAS  # Atualiza a posição do jogador no tabuleiro
         x, y = self.coordenadas_casa(jogador.posicao)
         i = self.jogadores.index(jogador)
-        x += i * 10  # Ajuste na posição horizontal do jogador para evitar sobreposição
-        y += i * 10  # Ajuste na posição vertical do jogador para evitar sobreposição
-        raio = LARGURA_CASA // 6  # Reduzir o tamanho do pino do jogador alterando o valor do raio
+        
+        x += (LARGURA_CASA / 2) - raio
+        if i == 0:
+            y += ((LARGURA_CASA) / 10)
+        elif i == 1:
+            y += (LARGURA_CASA / 2) - raio
+        elif i == 2:
+           y += ((9 * LARGURA_CASA) / 10) - (2 * raio) 
+       
         centro_x, centro_y = x + raio, y + raio
         self.canvas.coords(jogador.pino, centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio)
 
@@ -336,14 +303,16 @@ class GameInterface:
             center_y = y + LARGURA_CASA / 2
             
             if i == 0:
-                self.canvas.create_rectangle(x, y, x + LARGURA_CASA, y + LARGURA_CASA, fill="#fefefe", outline="black")
-                self.canvas.create_text(center_x, center_y, text=str(i+1), fill='#172934', font=("Arial", 12, "bold"))
+                self.canvas.create_rectangle(x, y, x + LARGURA_CASA, y + LARGURA_CASA, fill="#53c7f8", outline="black")
+                self.arrow_image = ImageTk.PhotoImage(Image.open("media/right-arrow-resized.png"))
+                self.canvas.create_image(center_x, center_y, image=self.arrow_image)
+
             else:
                 self.canvas.create_rectangle(x, y, x + LARGURA_CASA, y + LARGURA_CASA, fill=cor, outline="black")
                 self.canvas.create_text(center_x, center_y, text=str(i+1), fill=subcor, font=("Arial", 12, "bold"))        
     
     def _criar_jogadores(self):
-        cores = ['red', 'blue', 'green', 'yellow', 'purple']
+        cores = ['red','yellow', 'blue']
         jogadores = []
         for i in range(NUM_JOGADORES):
             jogador = Jogador(f'Jogador {i + 1}', cores[i])
@@ -352,14 +321,21 @@ class GameInterface:
 
     
     def desenhar_jogadores(self):
+        raio = LARGURA_CASA // 6
+
         for i, jogador in enumerate(self.jogadores):
             x, y = self.coordenadas_casa(jogador.posicao)
-            x += i * 10  # Ajuste na posição horizontal do jogador para evitar sobreposição
-            y += i * 10  # Ajuste na posição vertical do jogador para evitar sobreposição
-            jogador.pino = self.desenhar_jogador(x, y, jogador.cor)
 
-    def desenhar_jogador(self, x, y, cor):
-        raio = LARGURA_CASA // 6  # Reduzir o tamanho do pino do jogador alterando o valor do raio
+            x += (LARGURA_CASA / 2) - raio
+            if i == 0:
+                y += ((LARGURA_CASA) / 10)
+            elif i == 1:
+                y += (LARGURA_CASA / 2) - raio
+            elif i == 2:
+               y += ((9 * LARGURA_CASA) / 10) - (2 * raio)
+            jogador.pino = self.desenhar_jogador(x, y, jogador.cor, raio)
+
+    def desenhar_jogador(self, x, y, cor, raio):
         centro_x, centro_y = x + raio, y + raio
         pino = self.canvas.create_oval(centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio, fill=cor)
         return pino
@@ -415,49 +391,33 @@ class GameInterface:
             self._create_rounded_rect(x1, y1, x2, y2, radius=20, fill=card_bg, outline=card_outline)
             self.right_frame.create_text(x1 + 10, y1 + 10, text=subtitles[i], anchor="nw", font=("Arial", 14, "bold"), fill=card_title)
 
-        first_card_lines = [
-            { 'field': 'Bank', 'value': 'U$$ 100000' },
-            { 'field': 'Salary', 'value': 'U$$ 5000' },
-            { 'field': 'Childs', 'value': 'U$$ 0' },
-            { 'field': 'Retirement', 'value': 'U$$ 5000' },
-            { 'field': 'Life insurance', 'value': 'Yes' },
-            { 'field': 'Vehicle insurance', 'value': 'Yes' }
+        default_card_lines = [
+            { 'field': 'Bank', 'value': f'U$$ {Jogador.INIT_BANK}' },
+            { 'field': 'Salary', 'value': f'U$$ {Jogador.INIT_SALARY}' },
+            { 'field': 'Childs', 'value': '0' },
+            { 'field': 'Retirement', 'value': 'U$$ 0' },
+            { 'field': 'Life insurance', 'value': 'No' },
+            { 'field': 'Vehicle insurance', 'value': 'No' }
         ]
         y_start = card_space + 40
 
-        for line in first_card_lines:
+        for line in default_card_lines:
             field_text = self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#22471a')
             value_text = self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12, "bold"), fill='#22471a')
             self.first_card_texts.append((field_text, value_text))
             y_start += 22
 
-        second_card_lines = [
-            { 'field': 'Bank', 'value': 'U$$ 142500' },
-            { 'field': 'Salary', 'value': 'U$$ 5500' },
-            { 'field': 'Childs', 'value': 'U$$ 0' },
-            { 'field': 'Retirement', 'value': 'U$$ 0' },
-            { 'field': 'Life insurance', 'value': 'No' },
-            { 'field': 'Vehicle insurance', 'value': 'Yes' }
-        ]
         y_start = 2 * card_space + card_height + 40
 
-        for line in second_card_lines:
+        for line in default_card_lines:
             field_text = self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#043c50')
-            value_text = self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12, "bold"), fill='#043c50')
+            value_text = self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12), fill='#043c50')
             self.second_card_texts.append((field_text, value_text))
             y_start += 22
 
-        third_card_lines = [
-            { 'field': 'Bank', 'value': 'U$$ 142500' },
-            { 'field': 'Salary', 'value': 'U$$ 5500' },
-            { 'field': 'Childs', 'value': 'U$$ 0' },
-            { 'field': 'Retirement', 'value': 'U$$ 0' },
-            { 'field': 'Life insurance', 'value': 'No' },
-            { 'field': 'Vehicle insurance', 'value': 'Yes' }
-        ]
         y_start = 3 * card_space + 2 * card_height + 40
 
-        for line in third_card_lines:
+        for line in default_card_lines:
             self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#043c50')
             self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12), fill='#043c50')
             y_start += 22
@@ -539,47 +499,6 @@ class GameInterface:
                                     command=lambda: self.girar_dado(self.jogadores[0]), style="Dice.TButton", cursor="hand2")
         self.btn_girar.place(x=LARGURA_TABULEIRO // 2 - self.btn_girar.winfo_reqwidth() // 2,
                              y=ALTURA_TABULEIRO // 2 + LARGURA_CASA)
-    
-    def handle_new_casa_events(self, jogador: Jogador):
-        new_pos = jogador.posicao
-
-        for casa in Casa:
-            if new_pos == casa.posicao:
-                
-                jogador.handle_default_turn_income()
-                
-                jogador.dinheiro += casa.transaction
-                
-                try:
-                    is_required_child = casa == Casa.CHILD_GRADUATION or casa == Casa.SCHOOL_CHANGE or casa == Casa.CHILDREN_WEDDING \
-                        or casa == Casa.MUSIC_LESSON or casa == Casa.SPORTS_COMPETITION or casa == Casa.BIRTHDAY_PARTY
-
-                    if is_required_child and jogador.child_amount == 0:
-                        raise ValueError("A child is required for this position. So no events will be reflected back to you this turn.")
-
-                    if casa == Casa.BIRTH or casa == Casa.ADOPTION:
-                        jogador.add_child()
-                    elif casa == Casa.PROMOTION:
-                        jogador.increase_salary_10_percent()
-                    elif casa == Casa.INTERNSHIP:
-                        jogador.handle_internship()
-                    elif casa == Casa.LIFE_INSURANCE:
-                        jogador.buy_life_insurance()
-                    elif casa == Casa.CAR_INSURANCE:
-                        jogador.buy_car_insurance()
-                    elif casa == Casa.RETIREMENT:
-                        jogador.set_retirement()
-                    elif casa == Casa.CAREER_CHANGE:
-                        jogador.increase_salary_20_percent()
-                    elif casa == Casa.INCOME_TAX:
-                        jogador.apply_income_tax()
-                    elif casa == Casa.VOLUNTEER_WORK:
-                        jogador.handle_volunter_work()
-                except Exception as err:
-                    CustomDialog(self.master, title=casa.title, message=err.args[0])
-                else:
-                    CustomDialog(self.master, title=casa.title, message=casa.description)
-                break
 
     def girar_dado(self, jogador: Jogador):
         passos = randint(1, 6)
@@ -595,13 +514,33 @@ class GameInterface:
             
             self.btn_girar.destroy()
             self._erase_dice()
-            #self.desenhar_dado(0)
             
             # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOSED
 
         
         new_card_content = jogador.get_card_content()
         self._update_card(1, new_card_content)
+
+    def handle_new_casa_events(self, jogador: Jogador):
+        casa = BoardHouse.from_posicao(jogador.posicao)
+
+        jogador.handle_default_turn_income()
+
+        jogador.dinheiro += casa.transaction
+
+        try:
+            child_required_cases = [
+                BoardHouse.CHILD_GRADUATION, BoardHouse.SCHOOL_CHANGE, 
+                BoardHouse.CHILDREN_WEDDING, BoardHouse.MUSIC_LESSON, 
+                BoardHouse.SPORTS_COMPETITION, BoardHouse.BIRTHDAY_PARTY
+            ]
+            if casa in child_required_cases and self.child_amount == 0:
+                raise ValueError("A child is required for this position. So no events will be reflected back to you this turn.")
+            casa.handle_event(jogador)
+        except Exception as err:
+            CustomDialog(self.master, title=casa.title, message=err.args[0])
+        else:
+            CustomDialog(self.master, title=casa.title, message=casa.description)
 
     def start_game(self):
         print('start game')
