@@ -8,101 +8,13 @@ from PIL import Image, ImageTk
 from components.CustomDialog import CustomDialog
 from utils.mask_dollar import mask_dollar
 from logic.BoardHouse import BoardHouse
-import math
+from logic.Player import Player
+from contants import NUM_JOGADORES, NUM_CASAS, LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA, COMPRIMENTO_LADO
 
-NUM_JOGADORES = 3
-NUM_CASAS = 36
-LARGURA_TABULEIRO = 800
-ALTURA_TABULEIRO = 800
-LARGURA_CASA = 80
-COMPRIMENTO_LADO = 10
+
 CORES = ["#e6bd22", "#148bc6", "#c01960", "#54ad39"]
 LIGHT_CORES = ["#edde22", "#56c2f0", "#e76da8", "#b3d880"]
 
-
-class Jogador:
-    INIT_SALARY = 2000
-    INIT_BANK = 100000
-
-    def __init__(self, player_id, cor):
-        self.player_id = player_id
-        self.cor = cor
-        self.posicao = 0
-        self.salario = self.INIT_SALARY
-        self.child_amount = 0
-        self.dinheiro = self.INIT_BANK
-        self.is_retired = False
-        self.is_playing = True
-        self.is_life_insured = False
-        self.is_vehicle_insured = False
-
-    def increase_salary_10_percent(self):
-        self.salario = math.ceil(1.1 * self.salario)
-    
-    def increase_salary_20_percent(self):
-        self.salario = math.ceil(1.2 * self.salario)
-    
-    def add_child(self):
-        if self.child_amount == 4:
-            raise ValueError('A player can only have up to 4 children. So no events will be reflected back to you this turn.')
-        self.child_amount += 1
-
-    def handle_default_turn_income(self):
-        COST_BY_CHILD = -500
-        transaction = self.salario
-
-        if self.is_retired:
-            transaction += 5000
-
-        transaction += self.child_amount * COST_BY_CHILD
-
-        self.dinheiro += transaction
-
-    def apply_income_tax(self):
-        BASE = 0.7
-        self.dinheiro = math.ceil(BASE * self.dinheiro)
-    
-    def handle_internship(self):
-        self.dinheiro -= math.ceil(0.5 * self.salario)
-    
-    def handle_volunter_work(self):
-        self.dinheiro -= self.salario
-
-    def buy_life_insurance(self):
-        if self.is_life_insured:
-            raise ValueError("Player already has life insurance. So no events will be reflected back to you this turn.")
-
-        self.dinheiro -= 10000
-        self.is_life_insured = True
-
-    def buy_car_insurance(self):
-        if self.is_vehicle_insured:
-            raise ValueError("Player already has vehicle insurance. So no events will be reflected back to you this turn.")
-        
-        self.dinheiro -= 8000
-        self.is_vehicle_insured = True
-
-    def set_retirement(self):
-        if self.is_retired:
-            raise ValueError('You already is retired. So no events will be reflected back to you this turn.')
-        self.is_retired = True
-    
-    def get_card_content(self):
-        return [
-            { 'field': 'Bank', 'value': f'U$$ {self.dinheiro}' },
-            { 'field': 'Salary', 'value': f'U$$ {self.salario}' },
-            { 'field': 'Childs', 'value': f'{self.child_amount}' },
-            { 'field': 'Retirement', 'value': 'U$$ 5000' if self.is_retired else 'U$$ 0' },
-            { 'field': 'Life insurance', 'value': 'Yes' if self.is_life_insured else 'No' },
-            { 'field': 'Vehicle insurance', 'value': 'Yes' if self.is_vehicle_insured else 'No' }
-        ]
-    
-    def set_out_of_match(self):
-        self.is_playing = False
-
-    @property
-    def is_broke(self):
-        return self.dinheiro < 0
 
 class ActorPlayer(DogPlayerInterface):
     def __init__(self, master):
@@ -275,11 +187,11 @@ class GameInterface:
         self.desenhar_casas()
         self.desenhar_jogadores()
 
-    def atualizar_posicao_jogador(self, jogador):
+    def atualizar_posicao_jogador(self, player):
         raio = LARGURA_CASA // 6
-        jogador.posicao %= NUM_CASAS  # Atualiza a posição do jogador no tabuleiro
-        x, y = self.coordenadas_casa(jogador.posicao)
-        i = self.jogadores.index(jogador)
+        player.posicao %= NUM_CASAS  # Atualiza a posição do player no tabuleiro
+        x, y = self.coordenadas_casa(player.posicao)
+        i = self.jogadores.index(player)
         
         x += (LARGURA_CASA / 2) - raio
         if i == 0:
@@ -290,7 +202,7 @@ class GameInterface:
            y += ((9 * LARGURA_CASA) / 10) - (2 * raio) 
        
         centro_x, centro_y = x + raio, y + raio
-        self.canvas.coords(jogador.pino, centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio)
+        self.canvas.coords(player.pino, centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio)
 
     def desenhar_casas(self):
         for i in list(range(10, 20)) + list(range(20, 30)) + list(range(0, 10)) + list(range(30, 36)):
@@ -315,7 +227,7 @@ class GameInterface:
         cores = ['red','yellow', 'blue']
         jogadores = []
         for i in range(NUM_JOGADORES):
-            jogador = Jogador(f'Jogador {i + 1}', cores[i])
+            jogador = Player(f'Jogador {i + 1}', cores[i])
             jogadores.append(jogador)
         return jogadores
 
@@ -392,8 +304,8 @@ class GameInterface:
             self.right_frame.create_text(x1 + 10, y1 + 10, text=subtitles[i], anchor="nw", font=("Arial", 14, "bold"), fill=card_title)
 
         default_card_lines = [
-            { 'field': 'Bank', 'value': f'U$$ {Jogador.INIT_BANK}' },
-            { 'field': 'Salary', 'value': f'U$$ {Jogador.INIT_SALARY}' },
+            { 'field': 'Bank', 'value': f'U$$ {Player.INIT_BANK}' },
+            { 'field': 'Salary', 'value': f'U$$ {Player.INIT_SALARY}' },
             { 'field': 'Childs', 'value': '0' },
             { 'field': 'Retirement', 'value': 'U$$ 0' },
             { 'field': 'Life insurance', 'value': 'No' },
@@ -500,28 +412,27 @@ class GameInterface:
         self.btn_girar.place(x=LARGURA_TABULEIRO // 2 - self.btn_girar.winfo_reqwidth() // 2,
                              y=ALTURA_TABULEIRO // 2 + LARGURA_CASA)
 
-    def girar_dado(self, jogador: Jogador):
+    def girar_dado(self, player: Player):
         passos = randint(1, 6)
-        jogador.posicao += passos
+        player.posicao += passos
 
         self.canvas.delete("dado")
         self.desenhar_dado(passos)
-        self.atualizar_posicao_jogador(jogador)
-        self.handle_new_casa_events(jogador)
+        self.atualizar_posicao_jogador(player)
+        self.handle_new_casa_events(player)
 
-        if jogador.is_broke:
-            jogador.set_out_of_match()
+        if player.is_broke:
+            player.set_out_of_match()
             
             self.btn_girar.destroy()
             self._erase_dice()
             
             # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOSED
 
-        
-        new_card_content = jogador.get_card_content()
+        new_card_content = player.get_card_content()
         self._update_card(1, new_card_content)
 
-    def handle_new_casa_events(self, jogador: Jogador):
+    def handle_new_casa_events(self, jogador: Player):
         casa = BoardHouse.from_posicao(jogador.posicao)
 
         jogador.handle_default_turn_income()
@@ -534,7 +445,7 @@ class GameInterface:
                 BoardHouse.CHILDREN_WEDDING, BoardHouse.MUSIC_LESSON, 
                 BoardHouse.SPORTS_COMPETITION, BoardHouse.BIRTHDAY_PARTY
             ]
-            if casa in child_required_cases and self.child_amount == 0:
+            if casa in child_required_cases and jogador.child_amount == 0:
                 raise ValueError("A child is required for this position. So no events will be reflected back to you this turn.")
             casa.handle_event(jogador)
         except Exception as err:
