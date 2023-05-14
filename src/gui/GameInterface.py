@@ -2,16 +2,12 @@ from tkinter import *
 import tkinter as tk
 from tkinter import ttk
 from random import randint
-from PIL import Image, ImageTk
 from components.CustomDialog import CustomDialog
 from logic.BoardHouse import BoardHouse
 from logic.Player import Player
-from contants import NUM_JOGADORES, NUM_CASAS, LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA, COMPRIMENTO_LADO
-
-
-CORES = ["#e6bd22", "#148bc6", "#c01960", "#54ad39"]
-LIGHT_CORES = ["#edde22", "#56c2f0", "#e76da8", "#b3d880"]
-
+from logic.Board import Board
+from contants import NUM_JOGADORES, NUM_CASAS, LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA
+from utils.get_board_house_coordinates import get_board_house_coordinates
 
 class GameInterface:
     def __init__(self, master, player_name):
@@ -25,6 +21,9 @@ class GameInterface:
         self._create_canvas()
         self._create_right_frame()
 
+        self.board = Board(self.canvas)
+        self.board.draw_board_spaces()
+
         self.jogadores = self._create_players()
 
         self.player_name = player_name
@@ -34,13 +33,12 @@ class GameInterface:
 
         self._create_cards()
 
-        self.draw_board_spaces()
-        self.draw_players()
+        self.board.draw_players(self.jogadores)
 
     def atualizar_posicao_jogador(self, player):
         raio = LARGURA_CASA // 6
         player.posicao %= NUM_CASAS  # Atualiza a posição do player no tabuleiro
-        x, y = self.coordenadas_casa(player.posicao)
+        x, y = get_board_house_coordinates(player.posicao)
         i = self.jogadores.index(player)
         
         x += (LARGURA_CASA / 2) - raio
@@ -160,47 +158,6 @@ class GameInterface:
             self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12), fill='#043c50')
             y_start += 22
 
-    
-    def draw_board_spaces(self):
-        for i in list(range(10, 20)) + list(range(20, 30)) + list(range(0, 10)) + list(range(30, 36)):
-            x, y = self.coordenadas_casa(i)
-            cor = CORES[i % len(CORES)]
-            subcor = LIGHT_CORES[i % len(LIGHT_CORES)]
-
-            # Calculate center of casa
-            center_x = x + LARGURA_CASA / 2
-            center_y = y + LARGURA_CASA / 2
-            
-            if i == 0:
-                self.canvas.create_rectangle(x, y, x + LARGURA_CASA, y + LARGURA_CASA, fill="#53c7f8", outline="black")
-                self.arrow_image = ImageTk.PhotoImage(Image.open("media/right-arrow-resized.png"))
-                self.canvas.create_image(center_x, center_y, image=self.arrow_image)
-
-            else:
-                self.canvas.create_rectangle(x, y, x + LARGURA_CASA, y + LARGURA_CASA, fill=cor, outline="black")
-                self.canvas.create_text(center_x, center_y, text=str(i+1), fill=subcor, font=("Arial", 12, "bold"))        
-
-    
-    def draw_players(self):
-        raio = LARGURA_CASA // 6
-
-        for i, jogador in enumerate(self.jogadores):
-            x, y = self.coordenadas_casa(jogador.posicao)
-
-            x += (LARGURA_CASA / 2) - raio
-            if i == 0:
-                y += ((LARGURA_CASA) / 10)
-            elif i == 1:
-                y += (LARGURA_CASA / 2) - raio
-            elif i == 2:
-               y += ((9 * LARGURA_CASA) / 10) - (2 * raio)
-            jogador.pino = self.desenhar_jogador(x, y, jogador.cor, raio)
-
-    def desenhar_jogador(self, x, y, cor, raio):
-        centro_x, centro_y = x + raio, y + raio
-        pino = self.canvas.create_oval(centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio, fill=cor)
-        return pino
-
     def _create_rounded_rect(self, x1, y1, x2, y2, radius=25, **kwargs):
         """Draw a rounded rectangle"""
         points = [x1+radius, y1,
@@ -236,23 +193,6 @@ class GameInterface:
         for i, line in enumerate(new_lines):
             self.right_frame.itemconfig(texts[i][0], text=line['field'])
             self.right_frame.itemconfig(texts[i][1], text=line['value'])
-    
-    def coordenadas_casa(self, index):
-        espaco = (LARGURA_TABULEIRO - LARGURA_CASA) / (COMPRIMENTO_LADO - 1)
-        x, y = 0, 0
-        if index < COMPRIMENTO_LADO:
-            x = index * espaco
-            y = 0
-        elif index < 2 * COMPRIMENTO_LADO - 1:
-            x = LARGURA_TABULEIRO - LARGURA_CASA
-            y = (index - COMPRIMENTO_LADO + 1) * espaco
-        elif index < 3 * COMPRIMENTO_LADO - 2:
-            x = LARGURA_TABULEIRO - LARGURA_CASA - (index - 2 * COMPRIMENTO_LADO + 2) * espaco
-            y = ALTURA_TABULEIRO - LARGURA_CASA
-        else:
-            x = 0
-            y = ALTURA_TABULEIRO - LARGURA_CASA - (index - 3 * COMPRIMENTO_LADO + 3) * espaco
-        return x, y
 
     def desenhar_dado(self, numero):
         centro_x, centro_y = LARGURA_TABULEIRO // 2, ALTURA_TABULEIRO // 2
