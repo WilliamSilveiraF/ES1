@@ -1,11 +1,10 @@
 from tkinter import *
 import tkinter as tk
-from tkinter import ttk
-from random import randint
 from components.CustomDialog import CustomDialog
 from logic.BoardHouse import BoardHouse
 from logic.Player import Player
-from logic.Board import Board
+from gui.Board import Board
+from gui.Dice import Dice
 from contants import NUM_JOGADORES, NUM_CASAS, LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA
 from utils.get_board_house_coordinates import get_board_house_coordinates
 
@@ -22,24 +21,25 @@ class GameInterface:
         self._create_right_frame()
 
         self.board = Board(self.canvas)
-        self.board.draw_board_spaces()
 
-        self.jogadores = self._create_players()
+        self.players = self._create_players()
 
         self.player_name = player_name
         self._create_player_text()
-        self._create_roll_btn()
+        
+        self.dice = Dice(self.canvas, self.frame, command=lambda: self.roll_dice(self.players[0]))
+
         self._create_game_title()
 
         self._create_cards()
 
-        self.board.draw_players(self.jogadores)
+        self.board.draw_players(self.players)
 
     def atualizar_posicao_jogador(self, player):
         raio = LARGURA_CASA // 6
         player.posicao %= NUM_CASAS  # Atualiza a posição do player no tabuleiro
         x, y = get_board_house_coordinates(player.posicao)
-        i = self.jogadores.index(player)
+        i = self.players.index(player)
         
         x += (LARGURA_CASA / 2) - raio
         if i == 0:
@@ -82,19 +82,6 @@ class GameInterface:
         self.player_text = self.canvas.create_text(LARGURA_CASA + 10, LARGURA_CASA + 10, 
                                                     text=f"#{self.player_name}", anchor="nw",
                                                     font=("Arial", 16, "bold"), fill="#172934")
-    def _create_roll_btn(self):
-        style = ttk.Style()
-        style.configure("Dice.TButton", bordercolor="black", borderwidth=4, relief="groove",
-                        font=("Arial", 10, "bold"), background="white")
-        style.layout("Dice.TButton",
-                     [('Button.border', {'sticky': 'nswe', 'border': '1', 'children':
-                         [('Button.padding', {'sticky': 'nswe', 'border': '1', 'children':
-                             [('Button.label', {'sticky': 'nswe'})]})]})])
-
-        self.btn_girar = ttk.Button(self.frame, text="Roll Dice",
-                                    command=lambda: self.girar_dado(self.jogadores[0]), style="Dice.TButton", cursor="hand2")
-        self.btn_girar.place(x=LARGURA_TABULEIRO // 2 - self.btn_girar.winfo_reqwidth() // 2,
-                             y=ALTURA_TABULEIRO // 2 + LARGURA_CASA)
 
     def _create_game_title(self):
         self.canvas.create_text(LARGURA_CASA + 20, ALTURA_TABULEIRO - LARGURA_CASA - 20, text="The Game Of Life",
@@ -194,70 +181,18 @@ class GameInterface:
             self.right_frame.itemconfig(texts[i][0], text=line['field'])
             self.right_frame.itemconfig(texts[i][1], text=line['value'])
 
-    def desenhar_dado(self, numero):
-        centro_x, centro_y = LARGURA_TABULEIRO // 2, ALTURA_TABULEIRO // 2
-        lado = LARGURA_CASA
-        meio_lado = lado // 2
-        raio = LARGURA_CASA // 8
-        dist_multiplier = 2
-
-        self._erase_dice()
-
-        self.dado_rectangle = self.canvas.create_rectangle(centro_x - meio_lado, centro_y - meio_lado, centro_x + meio_lado, centro_y + meio_lado, fill="white", outline="black")
-
-        pontos = {
-            1: [(0, 0)],
-            2: [(-1, -1), (1, 1)],
-            3: [(-1, -1), (0, 0), (1, 1)],
-            4: [(-1, -1), (-1, 1), (1, -1), (1, 1)],
-            5: [(-1, -1), (-1, 1), (0, 0), (1, -1), (1, 1)],
-            6: [(-1, -1), (-1, 0), (-1, 1), (1, -1), (1, 0), (1, 1)]
-        }
-
-        self.dado_ovals = []
-        for dx, dy in pontos[numero]:
-            x = centro_x + dx * raio * dist_multiplier
-            y = centro_y + dy * raio * dist_multiplier
-            oval = self.canvas.create_oval(x - raio, y - raio, x + raio, y + raio, fill="black")
-            self.dado_ovals.append(oval)
-    
-    def _erase_dice(self):
-        if hasattr(self, 'dado_rectangle'):
-            self.canvas.delete(self.dado_rectangle)
-        if hasattr(self, 'dado_ovals'):
-            for oval in self.dado_ovals:
-                self.canvas.delete(oval)
-            self.dado_ovals = []
-
-    def _criar_btn_girar(self):
-        style = ttk.Style()
-        style.configure("Dice.TButton", bordercolor="black", borderwidth=4, relief="groove",
-                        font=("Arial", 10, "bold"), background="white")
-        style.layout("Dice.TButton",
-                     [('Button.border', {'sticky': 'nswe', 'border': '1', 'children':
-                         [('Button.padding', {'sticky': 'nswe', 'border': '1', 'children':
-                             [('Button.label', {'sticky': 'nswe'})]})]})])
-
-        self.btn_girar = ttk.Button(self.frame, text="Roll Dice",
-                                    command=lambda: self.girar_dado(self.jogadores[0]), style="Dice.TButton", cursor="hand2")
-        self.btn_girar.place(x=LARGURA_TABULEIRO // 2 - self.btn_girar.winfo_reqwidth() // 2,
-                             y=ALTURA_TABULEIRO // 2 + LARGURA_CASA)
-
-    def girar_dado(self, player: Player):
-        passos = randint(1, 6)
-        player.posicao += passos
-
-        self.canvas.delete("dado")
-        self.desenhar_dado(passos)
+    def roll_dice(self, player: Player):
+        steps = self.dice.roll()
+        player.posicao += steps
+        self.dice.draw(steps)
         self.atualizar_posicao_jogador(player)
         self.handle_new_casa_events(player)
 
         if player.is_broke:
             player.set_out_of_match()
-            
-            self.btn_girar.destroy()
-            self._erase_dice()
-            
+
+            self.dice.roll_btn.destroy()
+            self.dice.erase()
             # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOSED
 
         new_card_content = player.get_card_content()

@@ -9,6 +9,7 @@ LIGHT_CORES = ["#edde22", "#56c2f0", "#e76da8", "#b3d880"]
 class Board:
     def __init__(self, canvas):
         self.canvas = canvas
+        self.draw_board_spaces()
 
     def draw_board_spaces(self):
         for i in list(range(10, 20)) + list(range(20, 30)) + list(range(0, 10)) + list(range(30, 36)):
