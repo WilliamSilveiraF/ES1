@@ -1,13 +1,13 @@
 from tkinter import *
 import tkinter as tk
 from components.CustomDialog import CustomDialog
-from logic.BoardHouse import BoardHouse
 from logic.Player import Player
 from gui.Board import Board
 from gui.Dice import Dice
 from gui.RightFrame import RightFrame
 from contants import NUM_JOGADORES, NUM_CASAS, LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA
 from utils.get_board_house_coordinates import get_board_house_coordinates
+from logic.GameManager import GameManager
 
 class GameInterface:
     def __init__(self, master, player_name):
@@ -29,7 +29,8 @@ class GameInterface:
         self.player_name = player_name
         self._create_player_text()
         
-        self.dice = Dice(self.canvas, self.frame, command=lambda: self.roll_dice(self.players[0]))
+        self.dice = Dice(self.canvas, self.frame, command=lambda: self.handle_dice_roll(self.players[0]))
+        self.game_logic = GameManager(self.players, self.dice)
 
         self._create_game_title()
 
@@ -90,43 +91,42 @@ class GameInterface:
     def _update_card(self, card_number, new_lines):
         self.right_frame._update_card(card_number, new_lines)
 
-    def roll_dice(self, player: Player):
-        steps = self.dice.roll()
-        player.posicao += steps
+    def handle_dice_roll(self, player: Player):
+        steps = self.game_logic.roll_dice(player)
         self.dice.draw(steps)
-        self.update_player_position(player)
-        self.handle_new_casa_events(player)
+        self.game_logic.update_player_position(player)
+        self.update_player_position_on_board(player)
+        title, message = self.game_logic.handle_new_casa_events(player)
+        self.show_dialog(title, message)
 
         if player.is_broke:
             player.set_out_of_match()
 
             self.dice.roll_btn.destroy()
             self.dice.erase()
-            # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOSED
+            # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOST
 
         new_card_content = player.get_card_content()
         self._update_card(1, new_card_content)
 
-    def handle_new_casa_events(self, jogador: Player):
-        casa = BoardHouse.from_posicao(jogador.posicao)
+    def update_player_position_on_board(self, player):
+        raio = LARGURA_CASA // 6
+        x, y = get_board_house_coordinates(player.posicao)
+        i = self.players.index(player)
+        
+        x += (LARGURA_CASA / 2) - raio
+        if i == 0:
+            y += ((LARGURA_CASA) / 10)
+        elif i == 1:
+            y += (LARGURA_CASA / 2) - raio
+        elif i == 2:
+           y += ((9 * LARGURA_CASA) / 10) - (2 * raio) 
+       
+        centro_x, centro_y = x + raio, y + raio
+        self.canvas.coords(player.pino, centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio)
 
-        jogador.handle_default_turn_income()
-
-        jogador.dinheiro += casa.transaction
-
-        try:
-            child_required_cases = [
-                BoardHouse.CHILD_GRADUATION, BoardHouse.SCHOOL_CHANGE, 
-                BoardHouse.CHILDREN_WEDDING, BoardHouse.MUSIC_LESSON, 
-                BoardHouse.SPORTS_COMPETITION, BoardHouse.BIRTHDAY_PARTY
-            ]
-            if casa in child_required_cases and jogador.child_amount == 0:
-                raise ValueError("A child is required for this position. So no events will be reflected back to you this turn.")
-            casa.handle_event(jogador)
-        except Exception as err:
-            CustomDialog(self.master, title=casa.title, message=err.args[0])
-        else:
-            CustomDialog(self.master, title=casa.title, message=casa.description)
-
+    def show_dialog(self, title, message):
+        CustomDialog(self.master, title=title, message=message)
+        
     def start_game(self):
         print('start game')
