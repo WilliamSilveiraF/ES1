@@ -5,6 +5,7 @@ from logic.BoardHouse import BoardHouse
 from logic.Player import Player
 from gui.Board import Board
 from gui.Dice import Dice
+from gui.RightFrame import RightFrame
 from contants import NUM_JOGADORES, NUM_CASAS, LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA
 from utils.get_board_house_coordinates import get_board_house_coordinates
 
@@ -18,7 +19,8 @@ class GameInterface:
 
         self._create_menu()
         self._create_canvas()
-        self._create_right_frame()
+
+        self.right_frame = RightFrame(self.frame, 300, ALTURA_TABULEIRO)
 
         self.board = Board(self.canvas)
 
@@ -31,11 +33,9 @@ class GameInterface:
 
         self._create_game_title()
 
-        self._create_cards()
-
         self.board.draw_players(self.players)
 
-    def atualizar_posicao_jogador(self, player):
+    def update_player_position(self, player):
         raio = LARGURA_CASA // 6
         player.posicao %= NUM_CASAS  # Atualiza a posição do player no tabuleiro
         x, y = get_board_house_coordinates(player.posicao)
@@ -87,105 +87,14 @@ class GameInterface:
         self.canvas.create_text(LARGURA_CASA + 20, ALTURA_TABULEIRO - LARGURA_CASA - 20, text="The Game Of Life",
                         anchor='sw', font=("Futura", 12, "italic"), fill="black")
 
-    def _create_cards(self):
-        self.first_card_texts = []
-        self.second_card_texts = []
-        self.third_card_texts = []
-        
-        card_width = int(0.8 * 300)
-        card_height = int(ALTURA_TABULEIRO / 4)
-        card_space = int((ALTURA_TABULEIRO - 3 * card_height) / 4)
-
-        x1 = (300 - card_width) // 2
-        subtitles = ["#Jogador 1", "#Jogador 2", "#Jogador 3"]
-
-        for i in range(3):
-            if i == 0:
-                [shadow_color, card_bg, card_outline, card_title] = ['#d1e8aa', '#c8df99', '#8ac543', '#22471a']
-            else:
-                [shadow_color, card_bg, card_outline, card_title] = ['#ebf8ff', '#70cdf6', '#aadef5', '#043c50']
-
-            y1 = card_space * (i + 1) + card_height * i
-            x2 = x1 + card_width
-            y2 = y1 + card_height
-            # shadow
-            self._create_rounded_rect(x1+5, y1+5, x2+5, y2+5, radius=20, fill=shadow_color)
-            # card
-            self._create_rounded_rect(x1, y1, x2, y2, radius=20, fill=card_bg, outline=card_outline)
-            self.right_frame.create_text(x1 + 10, y1 + 10, text=subtitles[i], anchor="nw", font=("Arial", 14, "bold"), fill=card_title)
-
-        default_card_lines = [
-            { 'field': 'Bank', 'value': f'U$$ {Player.INIT_BANK}' },
-            { 'field': 'Salary', 'value': f'U$$ {Player.INIT_SALARY}' },
-            { 'field': 'Childs', 'value': '0' },
-            { 'field': 'Retirement', 'value': 'U$$ 0' },
-            { 'field': 'Life insurance', 'value': 'No' },
-            { 'field': 'Vehicle insurance', 'value': 'No' }
-        ]
-        y_start = card_space + 40
-
-        for line in default_card_lines:
-            field_text = self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#22471a')
-            value_text = self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12, "bold"), fill='#22471a')
-            self.first_card_texts.append((field_text, value_text))
-            y_start += 22
-
-        y_start = 2 * card_space + card_height + 40
-
-        for line in default_card_lines:
-            field_text = self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#043c50')
-            value_text = self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12), fill='#043c50')
-            self.second_card_texts.append((field_text, value_text))
-            y_start += 22
-
-        y_start = 3 * card_space + 2 * card_height + 40
-
-        for line in default_card_lines:
-            self.right_frame.create_text(x1 + 10, y_start, text=line['field'], anchor="nw", font=("Arial", 12, "bold"), fill='#043c50')
-            self.right_frame.create_text(x1 + card_width - 10, y_start, text=line['value'], anchor="ne", font=("Arial", 12), fill='#043c50')
-            y_start += 22
-
-    def _create_rounded_rect(self, x1, y1, x2, y2, radius=25, **kwargs):
-        """Draw a rounded rectangle"""
-        points = [x1+radius, y1,
-                x1+radius, y1,
-                x2-radius, y1,
-                x2-radius, y1,
-                x2, y1, 
-                x2, y1+radius,
-                x2, y1+radius,
-                x2, y2-radius,
-                x2, y2-radius,
-                x2, y2,
-                x2-radius, y2,
-                x2-radius, y2,
-                x1+radius, y2,
-                x1+radius, y2,
-                x1, y2,
-                x1, y2-radius,
-                x1, y2-radius,
-                x1, y1+radius,
-                x1, y1+radius,
-                x1, y1]
-        return self.right_frame.create_polygon(points, **kwargs, smooth=True)
-    
     def _update_card(self, card_number, new_lines):
-        if card_number == 1:
-            texts = self.first_card_texts
-        elif card_number == 2:
-            texts = self.second_card_texts
-        else:
-            texts = self.third_card_texts
-
-        for i, line in enumerate(new_lines):
-            self.right_frame.itemconfig(texts[i][0], text=line['field'])
-            self.right_frame.itemconfig(texts[i][1], text=line['value'])
+        self.right_frame._update_card(card_number, new_lines)
 
     def roll_dice(self, player: Player):
         steps = self.dice.roll()
         player.posicao += steps
         self.dice.draw(steps)
-        self.atualizar_posicao_jogador(player)
+        self.update_player_position(player)
         self.handle_new_casa_events(player)
 
         if player.is_broke:
