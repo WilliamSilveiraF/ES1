@@ -20,8 +20,9 @@ class ActorPlayer(DogPlayerInterface):
     def start_match(self):
         start_status = self.dog_server_interface.start_match(3)
         message = start_status.get_message()
-        
-        return message
+        players = start_status.get_players()
+
+        return message, players
 
     def start_game(self):
         self.player_name = self.init_interface.name_var.get()  # Store the player name
@@ -36,12 +37,12 @@ class ActorPlayer(DogPlayerInterface):
         if conn_message != 'Conectado a Dog Server':
             return
 
-        #match_message = self.start_match() FIXME remove comments
-        #if match_message == 'Jogadores insuficientes':
-        #    self.init_interface.set_waiting_other_players()
-        #    return
+        message, players = self.start_match()
+        if message == 'Jogadores insuficientes':
+            self.init_interface.set_waiting_other_players()
+            return
 
-        self.render_game_interface()
+        self.render_game_interface(players)
         
     def render_init_interface(self):
         if self.game_interface:
@@ -52,17 +53,18 @@ class ActorPlayer(DogPlayerInterface):
         self.init_interface = InitInterface(self.master)
         self.init_interface.button.configure(command=self.start_game)
 
-    def render_game_interface(self):
+    def render_game_interface(self, players):
         if self.init_interface:
-            self.init_interface.frame.destroy()  # Close the initial page
+            self.init_interface.frame.destroy()
             self.init_interface = None
-        
-        self.game_interface = GameInterface(self.master, self.player_name)
+
+        self.game_interface = GameInterface(self.master, self.player_name, players)
 
     def receive_start(self, start_status):
         message = start_status.get_message()
+        players = start_status.get_players()
         messagebox.showinfo(message=message)
-        self.render_game_interface()
+        self.render_game_interface(players)
 
     def receive_withdrawal_notification(self):
         messagebox.showwarning("Warning", "Some player left, this is the end of the game.")

@@ -6,8 +6,9 @@ class Player:
     MAX_CHILDREN = 4
     CHILD_COST = -500
 
-    def __init__(self, player_id, cor):
+    def __init__(self, player_id, turn, cor):
         self.player_id = player_id
+        self.turn = int(turn)
         self.cor = cor
         self.posicao = 0
         self.salario = self.INIT_SALARY

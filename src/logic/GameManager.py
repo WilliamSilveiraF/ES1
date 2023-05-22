@@ -2,11 +2,29 @@ from tkinter import *
 from logic.BoardHouse import BoardHouse
 from logic.Player import Player
 from contants import NUM_CASAS
+from utils.lowercase_and_underscore import lowercase_and_underscore
 
 class GameManager:
     def __init__(self, players, dice):
-        self.players = players
+        self.players = self._create_players(players)
         self.dice = dice
+
+    def _create_players(self, players):
+        colors = ['red','yellow', 'blue']
+        players = sorted(players, key=lambda x: int(x[2]))
+        instances = []
+        for player in players:
+            [name, created_at, turn] = player
+            player_id = lowercase_and_underscore(name)
+            instances.append(Player(player_id, turn, colors[int(turn)-1]))
+        return instances
+
+    def find_player(self, player_name: str) -> Player:
+        player_id = lowercase_and_underscore(player_name)
+        for player in self.players:
+            if player.player_id == player_id:
+                return player
+        raise ValueError('Player was not found')
 
     def roll_dice(self, player: Player):
         steps = self.dice.roll()
