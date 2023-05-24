@@ -58,7 +58,7 @@ class ActorPlayer(DogPlayerInterface):
             self.init_interface.frame.destroy()
             self.init_interface = None
 
-        self.game_interface = GameInterface(self.master, self.player_name, players)
+        self.game_interface = GameInterface(self.master, self.player_name, players, self.dog_server_interface)
 
     def receive_start(self, start_status):
         message = start_status.get_message()

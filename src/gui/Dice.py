@@ -9,6 +9,7 @@ class Dice:
         self.frame = frame
         self.command = command
         self._create_roll_btn()
+        self.number = 6
 
     def _create_roll_btn(self):
         style = ttk.Style()
@@ -21,8 +22,6 @@ class Dice:
 
         self.roll_btn = ttk.Button(self.frame, text="Roll Dice",
                                     command=self.command, style="Dice.TButton", cursor="hand2")
-        self.roll_btn.place(x=LARGURA_TABULEIRO // 2 - self.roll_btn.winfo_reqwidth() // 2,
-                             y=ALTURA_TABULEIRO // 2 + LARGURA_CASA)
 
     def roll(self):
         return randint(1, 6)
@@ -61,3 +60,10 @@ class Dice:
             for oval in self.dado_ovals:
                 self.canvas.delete(oval)
             self.dado_ovals = []
+
+    def hide_roll_btn(self):
+        self.roll_btn.place_forget()
+
+    def show_roll_btn(self):
+        self.roll_btn.place(x=LARGURA_TABULEIRO // 2 - self.roll_btn.winfo_reqwidth() // 2,
+                            y=ALTURA_TABULEIRO // 2 + LARGURA_CASA)

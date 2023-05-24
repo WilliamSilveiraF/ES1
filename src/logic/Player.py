@@ -11,7 +11,7 @@ class Player:
         self.turn = int(turn)
         self.cor = cor
         self.posicao = 0
-        self.salario = self.INIT_SALARY
+        self.salary = self.INIT_SALARY
         self.child_amount = 0
         self.dinheiro = self.INIT_BANK
         self.is_retired = False
@@ -20,10 +20,10 @@ class Player:
         self.is_vehicle_insured = False
 
     def increase_salary_10_percent(self):
-        self.salario = math.ceil(1.1 * self.salario)
+        self.salary = math.ceil(1.1 * self.salary)
     
     def increase_salary_20_percent(self):
-        self.salario = math.ceil(1.2 * self.salario)
+        self.salary = math.ceil(1.2 * self.salary)
     
     def add_child(self):
         if self.child_amount == self.MAX_CHILDREN:
@@ -31,7 +31,7 @@ class Player:
         self.child_amount += 1
 
     def handle_default_turn_income(self):
-        transaction = self.salario
+        transaction = self.salary
 
         if self.is_retired:
             transaction += 5000
@@ -45,10 +45,10 @@ class Player:
         self.dinheiro = math.ceil(BASE * self.dinheiro)
     
     def handle_internship(self):
-        self.dinheiro -= math.ceil(0.5 * self.salario)
+        self.dinheiro -= math.ceil(0.5 * self.salary)
     
     def handle_volunter_work(self):
-        self.dinheiro -= self.salario
+        self.dinheiro -= self.salary
 
     def buy_life_insurance(self):
         if self.is_life_insured:
@@ -72,7 +72,7 @@ class Player:
     def get_card_content(self):
         return [
             { 'field': 'Bank', 'value': f'U$$ {self.dinheiro}' },
-            { 'field': 'Salary', 'value': f'U$$ {self.salario}' },
+            { 'field': 'Salary', 'value': f'U$$ {self.salary}' },
             { 'field': 'Childs', 'value': f'{self.child_amount}' },
             { 'field': 'Retirement', 'value': 'U$$ 5000' if self.is_retired else 'U$$ 0' },
             { 'field': 'Life insurance', 'value': 'Yes' if self.is_life_insured else 'No' },

@@ -11,7 +11,8 @@ from utils.lowercase_and_underscore import lowercase_and_underscore
 from logic.GameManager import GameManager
 
 class GameInterface:
-    def __init__(self, master, player_name, players):
+    def __init__(self, master, player_name, players, dog_server_interface):
+        self.dog_server_interface = dog_server_interface
         self.master = master
         self.master.geometry(f"{LARGURA_TABULEIRO+300}x{ALTURA_TABULEIRO}")
 
@@ -20,8 +21,6 @@ class GameInterface:
 
         self._create_menu()
         self._create_canvas()
-
-        self.right_frame = RightFrame(self.frame, 300, ALTURA_TABULEIRO)
 
         self.board = Board(self.canvas)
 
@@ -35,9 +34,14 @@ class GameInterface:
         self._create_game_title()
 
         self.board.draw_players(self.game_logic.players)
-
-    def update_on_holder_player(self):
-        self.on_hold_player = self.game_logic.find_player(self.player_name)
+        self.right_frame = RightFrame(self.frame, 300, ALTURA_TABULEIRO, self.game_logic.players)
+        self.toggle_dice_visibility()
+        
+    def toggle_dice_visibility(self):
+        if self.on_hold_player == self.game_logic.player_turn:
+            self.dice.show_roll_btn()
+        else:
+            self.dice.hide_roll_btn()
 
     def update_player_position(self, player):
         raio = LARGURA_CASA // 6
@@ -101,6 +105,12 @@ class GameInterface:
             self.dice.erase()
             # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOST
 
+
+        self.game_logic.get_next_player_turn()
+        self.toggle_dice_visibility()
+        
+        #TODO MAKE METHOD WITH GAMEMANAGER STATE TO UPDATE ALL UI ELEMENTS
+        
         new_card_content = self.on_hold_player.get_card_content()
         self._update_card(1, new_card_content)
 
