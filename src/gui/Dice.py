@@ -27,6 +27,7 @@ class Dice:
         return randint(1, 6)
 
     def draw(self, number):
+        self.number = number
         centro_x, centro_y = LARGURA_TABULEIRO // 2, ALTURA_TABULEIRO // 2
         lado = LARGURA_CASA
         meio_lado = lado // 2

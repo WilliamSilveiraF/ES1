@@ -44,23 +44,6 @@ class GameInterface:
         else:
             self.dice.hide_roll_btn()
 
-    def update_player_position(self, player):
-        raio = LARGURA_CASA // 6
-        player.posicao %= NUM_CASAS  # Atualiza a posição do player no tabuleiro
-        x, y = get_board_house_coordinates(player.posicao)
-        i = self.game_logic.players.index(player)
-        
-        x += (LARGURA_CASA / 2) - raio
-        if i == 0:
-            y += ((LARGURA_CASA) / 10)
-        elif i == 1:
-            y += (LARGURA_CASA / 2) - raio
-        elif i == 2:
-           y += ((9 * LARGURA_CASA) / 10) - (2 * raio) 
-       
-        centro_x, centro_y = x + raio, y + raio
-        self.canvas.coords(player.pino, centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio)
-
     def _create_menu(self):
         self.menubar = Menu(self.master)
         self.menubar.option_add('*tearOff', FALSE)
@@ -91,10 +74,14 @@ class GameInterface:
     def refresh_ui(self):
         self.right_frame.update_cards(self.game_logic.players)
         self.toggle_dice_visibility()
+        self.dice.draw(self.game_logic.dice.number)
 
         for player in self.game_logic.players:
             self.update_player_position_on_board(player)
-        
+    
+    def handle_move(self, move):
+        self.game_logic.update_game_state(move['game_logic'])
+        self.refresh_ui()
 
     def handle_dice_roll(self):
         steps = self.game_logic.roll_dice()
@@ -105,14 +92,12 @@ class GameInterface:
 
         if self.game_logic.player_turn.is_broke:
             self.game_logic.player_turn.set_out_of_match()
-
-            self.dice.roll_btn.destroy()
-            self.dice.erase()
             # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOST
 
 
         self.game_logic.get_next_player_turn()
         self.refresh_ui()
+        self.dog_server_interface.send_move({ 'match_status': 'next', 'game_logic': self.game_logic.to_dict()})
 
     def update_player_position_on_board(self, player):
         raio = LARGURA_CASA // 6

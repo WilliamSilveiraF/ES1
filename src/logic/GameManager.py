@@ -48,10 +48,8 @@ class GameManager:
         self.turns += 1
         steps = self.dice.roll()
         self.player_turn.posicao += steps
+        self.player_turn.posicao %= NUM_CASAS
         return steps
-
-    def update_player_position(self, player):
-        player.posicao %= NUM_CASAS  # Atualiza a posição do player no tabuleiro
 
     def handle_new_casa_events(self, player: Player):
         casa = BoardHouse.from_posicao(player.posicao)
@@ -73,3 +71,21 @@ class GameManager:
             return casa.title, err.args[0]
         else:
             return casa.title, casa.description
+        
+    def to_dict(self):
+        return {
+            'players': [player.to_dict() for player in self.players],
+            'dice': self.dice.number,
+            'turns': self.turns,
+            'player_turn': self.player_turn.to_dict()
+        }
+    
+    def update_game_state(self, data: dict):
+        self.dice.number = data['dice']
+        self.turns = data['turns']
+
+        for player_data in data['players']:
+            player = self.find_player(player_data['player_id'])
+            player.update(player_data)
+
+        self.player_turn = self.find_player(data['player_turn']['player_id'])

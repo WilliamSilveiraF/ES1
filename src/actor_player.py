@@ -66,6 +66,9 @@ class ActorPlayer(DogPlayerInterface):
         messagebox.showinfo(message=message)
         self.render_game_interface(players)
 
+    def receive_move(self, move):
+        self.game_interface.handle_move(move)
+
     def receive_withdrawal_notification(self):
         messagebox.showwarning("Warning", "Some player left, this is the end of the game.")
         self.render_init_interface()

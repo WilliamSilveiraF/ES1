@@ -2,7 +2,7 @@ import math
 
 class Player:
     INIT_SALARY = 2000
-    INIT_BANK = 100000
+    INIT_BANK = 10000
     MAX_CHILDREN = 4
     CHILD_COST = -500
 
@@ -81,6 +81,31 @@ class Player:
     
     def set_out_of_match(self):
         self.is_playing = False
+
+    def to_dict(self):
+        return {
+            'player_id': self.player_id,
+            'turn': self.turn,
+            'cor': self.cor,
+            'posicao': self.posicao,
+            'salary': self.salary,
+            'child_amount': self.child_amount,
+            'dinheiro': self.dinheiro,
+            'is_retired': self.is_retired,
+            'is_playing': self.is_playing,
+            'is_life_insured': self.is_life_insured,
+            'is_vehicle_insured': self.is_vehicle_insured
+        }
+
+    def update(self, data: dict):
+        self.posicao = data['posicao']
+        self.salary = data['salary']
+        self.child_amount = data['child_amount']
+        self.dinheiro = data['dinheiro']
+        self.is_retired = data['is_retired']
+        self.is_playing = data['is_playing']
+        self.is_life_insured = data['is_life_insured']
+        self.is_vehicle_insured = data['is_vehicle_insured']
 
     @property
     def is_broke(self):
