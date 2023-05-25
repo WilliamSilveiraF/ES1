@@ -1,6 +1,6 @@
 from tkinter import *
 from PIL import Image, ImageTk
-from contants import LARGURA_CASA
+from constants import LARGURA_CASA
 from utils.get_board_house_coordinates import get_board_house_coordinates
 
 CORES = ["#e6bd22", "#148bc6", "#c01960", "#54ad39"]

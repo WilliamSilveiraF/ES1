@@ -1,7 +1,7 @@
 from tkinter import *
 from logic.BoardHouse import BoardHouse
 from logic.Player import Player
-from contants import NUM_CASAS
+from constants import NUM_CASAS, PLAYER_AMOUNT
 from utils.lowercase_and_underscore import lowercase_and_underscore
 
 class GameManager:
@@ -89,3 +89,9 @@ class GameManager:
             player.update(player_data)
 
         self.player_turn = self.find_player(data['player_turn']['player_id'])
+
+    @property
+    def is_game_finish(self):
+        players_with_nonpositive_money = list(filter(lambda player: player.dinheiro < 0, self.players))
+
+        return (len(players_with_nonpositive_money) >= (PLAYER_AMOUNT-1)) or self.turns > 90

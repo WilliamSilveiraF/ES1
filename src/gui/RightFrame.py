@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter as tk
 from logic.Player import Player
-from contants import ALTURA_TABULEIRO
+from constants import ALTURA_TABULEIRO
 from gui.CardFactory import CardFactory
 
 class RightFrame:

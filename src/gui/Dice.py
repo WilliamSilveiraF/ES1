@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from random import randint
-from contants import LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA
+from constants import LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA
 
 class Dice:
     def __init__(self, canvas, frame, command):

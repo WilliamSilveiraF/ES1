@@ -5,7 +5,7 @@ from logic.Player import Player
 from gui.Board import Board
 from gui.Dice import Dice
 from gui.RightFrame import RightFrame
-from contants import NUM_CASAS, LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA
+from constants import NUM_CASAS, LARGURA_TABULEIRO, ALTURA_TABULEIRO, LARGURA_CASA
 from utils.get_board_house_coordinates import get_board_house_coordinates
 from utils.lowercase_and_underscore import lowercase_and_underscore
 from logic.GameManager import GameManager
@@ -94,7 +94,8 @@ class GameInterface:
             self.game_logic.player_turn.set_out_of_match()
             # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOST
 
-
+        if self.game_logic.is_game_finish:
+            raise ValueError('HANDLE WINNER')
         self.game_logic.get_next_player_turn()
         self.refresh_ui()
         self.dog_server_interface.send_move({ 'match_status': 'next', 'game_logic': self.game_logic.to_dict()})

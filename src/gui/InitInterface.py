@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk
 
 from PIL import Image, ImageTk
-from contants import LARGURA_TABULEIRO
+from constants import LARGURA_TABULEIRO
 
 class InitInterface:
     def __init__(self, master):
