@@ -10,5 +10,5 @@ class RightFrame:
         self.right_frame.pack(side="right")
         self.cards = CardFactory(self.right_frame, ALTURA_TABULEIRO, players)
 
-    def _update_card(self, players: list[Player]):
-        pass
+    def update_cards(self, players: list[Player]):
+        self.cards.refresh_cards(players)

@@ -28,7 +28,6 @@ class GameInterface:
         
         self.dice = Dice(self.canvas, self.frame, command=lambda: self.handle_dice_roll())
         self.game_logic = GameManager(players, self.dice)
-        self.on_hold_player = self.game_logic.find_player(self.player_name)
 
         self._create_player_text()
         self._create_game_title()
@@ -38,7 +37,9 @@ class GameInterface:
         self.toggle_dice_visibility()
         
     def toggle_dice_visibility(self):
-        if self.on_hold_player == self.game_logic.player_turn:
+        on_hold_player = self.game_logic.find_player(self.player_name)
+        
+        if on_hold_player == self.game_logic.player_turn:
             self.dice.show_roll_btn()
         else:
             self.dice.hide_roll_btn()
@@ -80,26 +81,30 @@ class GameInterface:
 
     def _create_player_text(self):
         self.player_text = self.canvas.create_text(LARGURA_CASA + 10, LARGURA_CASA + 10, 
-                                                    text=f"#{self.on_hold_player.player_id}", anchor="nw",
+                                                    text=f"#{self.player_name}", anchor="nw",
                                                     font=("Arial", 16, "bold"), fill="#172934")
 
     def _create_game_title(self):
         self.canvas.create_text(LARGURA_CASA + 20, ALTURA_TABULEIRO - LARGURA_CASA - 20, text="The Game Of Life",
                         anchor='sw', font=("Futura", 12, "italic"), fill="black")
 
-    def _update_card(self, card_number, new_lines):
-        self.right_frame._update_card(card_number, new_lines)
+    def refresh_ui(self):
+        self.right_frame.update_cards(self.game_logic.players)
+        self.toggle_dice_visibility()
+
+        for player in self.game_logic.players:
+            self.update_player_position_on_board(player)
+        
 
     def handle_dice_roll(self):
-        steps = self.game_logic.roll_dice(self.on_hold_player)
+        steps = self.game_logic.roll_dice()
         self.dice.draw(steps)
-        self.game_logic.update_player_position(self.on_hold_player)
-        self.update_player_position_on_board(self.on_hold_player)
-        title, message = self.game_logic.handle_new_casa_events(self.on_hold_player)
+        self.update_player_position_on_board(self.game_logic.player_turn)
+        title, message = self.game_logic.handle_new_casa_events(self.game_logic.player_turn)
         self.show_dialog(title, message)
 
-        if self.on_hold_player.is_broke:
-            self.on_hold_player.set_out_of_match()
+        if self.game_logic.player_turn.is_broke:
+            self.game_logic.player_turn.set_out_of_match()
 
             self.dice.roll_btn.destroy()
             self.dice.erase()
@@ -107,12 +112,7 @@ class GameInterface:
 
 
         self.game_logic.get_next_player_turn()
-        self.toggle_dice_visibility()
-        
-        #TODO MAKE METHOD WITH GAMEMANAGER STATE TO UPDATE ALL UI ELEMENTS
-        
-        new_card_content = self.on_hold_player.get_card_content()
-        self._update_card(1, new_card_content)
+        self.refresh_ui()
 
     def update_player_position_on_board(self, player):
         raio = LARGURA_CASA // 6

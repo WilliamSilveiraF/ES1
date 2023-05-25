@@ -7,4 +7,8 @@ class CardCreator(ShapeCreator):
         self.card_attributes = card_attributes
 
     def create_card(self, x1, y1, x2, y2, radius):
-        self.create_rounded_rect(x1, y1, x2, y2, radius=radius, fill=self.card_attributes[1], outline=self.card_attributes[2])
+        return self.create_rounded_rect(x1, y1, x2, y2, radius=radius, fill=self.card_attributes[1], outline=self.card_attributes[2])
+
+    @staticmethod
+    def delete_card(frame, card):
+        frame.delete(card)

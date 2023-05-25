@@ -44,10 +44,10 @@ class GameManager:
                 return player
         raise ValueError('Player was not found')
 
-    def roll_dice(self, player: Player):
+    def roll_dice(self):
         self.turns += 1
         steps = self.dice.roll()
-        player.posicao += steps
+        self.player_turn.posicao += steps
         return steps
 
     def update_player_position(self, player):

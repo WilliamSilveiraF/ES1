@@ -17,3 +17,9 @@ class TextCreator:
             card_texts.append(Card(field_text, value_text))
             self.y_start += 22
         return card_texts
+    
+    @staticmethod
+    def delete_text(frame, texts):
+        for card_text in texts:
+            frame.delete(card_text.field)
+            frame.delete(card_text.value)
