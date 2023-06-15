@@ -19,7 +19,7 @@ class BoardHouse(Enum):
     LIFE_INSURANCE = (15, 'Life Insurance', "You've decided to buy life insurance. Pay U$$ 10000 to represent the insurance premium.", 0) 
     MARATHON = (16, 'Marathon', "You've decided to run a marathon! Pay U$$ 2500 to cover the registration and training costs.", -2500)
     ENTREPRENEUR = (17, 'Entrepreneur', 'You have taken the bold step of starting your own business! This exciting venture comes with its costs. Pay U$$ 25000 to cover the startup costs.', -25000)
-    FAMILY_TRIP = (18, 'Family Trip', "Quality time alert! You're taking a well-deserved family trip. It's time for relaxation and adventures. Pay U$$ 12000 for the trip expenses, including travel, accommodation, and daily allowances.", -12000)
+    BIRTHDAY_PARTY = (18, 'Birthday Party', "It's time to celebrate! One of your children has a birthday. You're throwing a party complete with cake, games, and party favors. Pay U$$ 7500 for the party expenses.", -7500)
     INHERITANCE = (19, 'Inheritance', "You've inherited a large sum of money. Collect U$$ 100000 bonus to represent the inheritance.", 100000)
     SPACE_TRAVEL = (20, 'Space Travel', "You've decided to go to space! Pay U$$ 30000 to cover the travel costs.", -30000)
     RETIREMENT = (21, 'Retirement', "You've retired after a long and successful career! It's time to relax and enjoy the fruits of your labor. Now, you will collect U$$ 5000 bonus each turn.", 0)
@@ -35,7 +35,7 @@ class BoardHouse(Enum):
     CHARITY_HOUSE = (31, 'Charity House', "You've decided to make a generous donation to a charity that's close to your heart. Pay U$$ 10000 amount to represent your charitable contribution.", -10000)
     MOTORCYCLE_JOURNEY = (32, 'Motorcycle Journey on Route 66', "You've decided to ride Route 66 on a motorcycle! Pay U$$ 8000 to cover the trip costs.", -8000)
     REMOTE_WORK = (33, 'Remote Work', 'You have landed the opportunity to work remotely! This gives you more flexibility and time to spend with family or on hobbies. Receive your normal salary this turn and gain U$$ 3000 bonus to represent the savings on transportation and work clothes.', 3000)
-    BIRTHDAY_PARTY = (34, 'Birthday Party', "It's time to celebrate! One of your children has a birthday. You're throwing a party complete with cake, games, and party favors. Pay U$$ 7500 for the party expenses.", -7500)
+    FAMILY_TRIP = (34, 'Family Trip', "Quality time alert! You're taking a well-deserved family trip. It's time for relaxation and adventures. Pay U$$ 12000 for the trip expenses, including travel, accommodation, and daily allowances.", -12000)
     WINDFALL = (35, 'Windfall', "You've received an unexpected windfall, perhaps from a forgotten investment or a distant relative. Collect U$$ 20000 bonus to represent the unexpected influx of money.", 20000)
 
     def __init__(self, posicao, title, description, transaction):
