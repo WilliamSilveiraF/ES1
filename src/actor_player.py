@@ -4,6 +4,7 @@ from dog.dog_interface import DogPlayerInterface
 from dog.dog_actor import DogActor
 from gui.GameInterface import GameInterface
 from gui.InitInterface import InitInterface
+from components.CustomDialog import CustomDialog
 
 class ActorPlayer(DogPlayerInterface):
     def __init__(self, master):
@@ -35,9 +36,11 @@ class ActorPlayer(DogPlayerInterface):
         messagebox.showinfo(message=conn_message)
 
         if conn_message != 'Conectado a Dog Server':
+            self.close_window()
             return
 
         message, players = self.start_match()
+        print(message)
         if message == 'Jogadores insuficientes':
             self.init_interface.set_waiting_other_players()
             return
@@ -70,8 +73,13 @@ class ActorPlayer(DogPlayerInterface):
         self.game_interface.handle_move(move)
 
     def receive_withdrawal_notification(self):
-        messagebox.showwarning("Warning", "Some player left, this is the end of the game.")
-        self.render_init_interface()
+        print('---> Algum usuário se desconectou')
+        if not self.game_interface.game_logic.is_game_finish:
+            messagebox.showwarning("Warning", "Some player left, this is the end of the game.")
+            self.close_window()
+
+    def close_window(self):
+        self.master.destroy()
 
 def main():
     root = Tk()

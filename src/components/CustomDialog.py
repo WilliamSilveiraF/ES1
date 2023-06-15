@@ -3,7 +3,7 @@ from tkinter import ttk
 import textwrap
 
 class CustomDialog(tk.Toplevel):
-    def __init__(self, parent, title=None, message=None):
+    def __init__(self, parent, title=None, message=None, command=None):
         super().__init__(parent)
         
         self.title(' ')
@@ -30,7 +30,10 @@ class CustomDialog(tk.Toplevel):
         self.button_frame = ttk.Frame(self.frame, style='CustomDialog.TFrame')
         self.button_frame.pack(pady=10)
 
-        btn = ttk.Button(self.button_frame, text="OK", command=self.destroy, cursor="hand2", style='CustomDialog.TButton')
+        if command is None:
+            command = self.destroy
+
+        btn = ttk.Button(self.button_frame, text="OK", command=command, cursor="hand2", style='CustomDialog.TButton')
         btn.pack(side="left", padx=5)
 
         self.transient(parent)

@@ -90,6 +90,10 @@ class GameManager:
 
         self.player_turn = self.find_player(data['player_turn']['player_id'])
 
+    def get_winner(self) -> Player:
+        players_in_the_game = list(filter(lambda player: player.is_playing, self.players))
+        return max(players_in_the_game, key=lambda player: player.dinheiro)
+
     @property
     def is_game_finish(self):
         players_with_nonpositive_money = list(filter(lambda player: player.dinheiro < 0, self.players))

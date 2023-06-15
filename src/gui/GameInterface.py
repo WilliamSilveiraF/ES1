@@ -1,5 +1,6 @@
 from tkinter import *
 import tkinter as tk
+from tkinter import messagebox
 from components.CustomDialog import CustomDialog
 from logic.Player import Player
 from gui.Board import Board
@@ -76,48 +77,48 @@ class GameInterface:
         self.toggle_dice_visibility()
         self.dice.draw(self.game_logic.dice.number)
 
-        for player in self.game_logic.players:
-            self.update_player_position_on_board(player)
+        self.update_players_position_on_the_board()
     
+    def update_players_position_on_the_board(self):
+        self.board.delete_all_players(self.game_logic.players)
+        self.board.draw_players(self.game_logic.players)
+
     def handle_move(self, move):
         self.game_logic.update_game_state(move['game_logic'])
         self.refresh_ui()
 
+        if self.game_logic.is_game_finish:
+            self.show_the_winner()
+
     def handle_dice_roll(self):
         steps = self.game_logic.roll_dice()
         self.dice.draw(steps)
-        self.update_player_position_on_board(self.game_logic.player_turn)
         title, message = self.game_logic.handle_new_casa_events(self.game_logic.player_turn)
         self.show_dialog(title, message)
 
         if self.game_logic.player_turn.is_broke:
             self.game_logic.player_turn.set_out_of_match()
-            # TODO SET DISABLED MODE IN CARD, RENDER A TITLE CONTAINING THAT THE PLAYER LOST
-
-        if self.game_logic.is_game_finish:
-            raise ValueError('HANDLE WINNER')
-        self.game_logic.get_next_player_turn()
-        self.refresh_ui()
-        self.dog_server_interface.send_move({ 'match_status': 'next', 'game_logic': self.game_logic.to_dict()})
-
-    def update_player_position_on_board(self, player):
-        raio = LARGURA_CASA // 6
-        x, y = get_board_house_coordinates(player.posicao)
-        i = self.game_logic.players.index(player)
+            self.show_dialog('Game over', 'You lost the match!!')        
         
-        x += (LARGURA_CASA / 2) - raio
-        if i == 0:
-            y += ((LARGURA_CASA) / 10)
-        elif i == 1:
-            y += (LARGURA_CASA / 2) - raio
-        elif i == 2:
-           y += ((9 * LARGURA_CASA) / 10) - (2 * raio) 
-       
-        centro_x, centro_y = x + raio, y + raio
-        self.canvas.coords(player.pino, centro_x - raio, centro_y - raio, centro_x + raio, centro_y + raio)
+        
+        if not self.game_logic.is_game_finish:
+            self.game_logic.get_next_player_turn()
 
-    def show_dialog(self, title, message):
-        CustomDialog(self.master, title=title, message=message)
+        self.dog_server_interface.send_move({ 'match_status': 'next', 'game_logic': self.game_logic.to_dict()})
+        self.refresh_ui()
+        
+        if self.game_logic.is_game_finish:
+            print(vars(self.game_logic))
+            self.show_the_winner()
+
+
+    def show_the_winner(self):
+        winner = self.game_logic.get_winner()
+        messagebox.showinfo(f'There is a winner in the match', f'The player #{winner.player_id} won the match')
+        self.master.destroy()
+
+    def show_dialog(self, title, message, command=None):
+        CustomDialog(self.master, title=title, message=message, command=command)
         
     def start_game(self):
         print('start game')
